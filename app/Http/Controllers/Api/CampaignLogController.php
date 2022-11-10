@@ -1,0 +1,133 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+
+class CampaignLogController extends Controller
+{
+    public function store(Request $request){
+        try{
+            //campaña pertenece al usuario?
+            $data = App\Campaign::where('id', $request->campaign_id)->where('usuario_id', auth('api')->user()->id)->first() ?? false;
+
+            if($data){
+                //valido request
+                $request->params = json_encode($request->params);
+                $validator = Validator::make($request->all(), [
+                    'campaign_id'         => 'required|integer',
+                    'campaign_info'       => 'required',
+                    'id_log'              => 'required|max:100',
+                    'url_referer_encrypt' => 'required|max:1000',
+                    'url_referer_decrypt' => 'required|max:1000',
+                    'params'              => 'required',
+                    'event'               => 'required|max:30',
+                    'ip_info'             => 'required|max:100'
+                ]);
+
+                if(!$validator->fails()){
+                    //guardo log
+                    $campaignlog =                    new App\CampaignLog();
+                    $campaignlog->usuario_id          = auth('api')->user()->id;
+                    $campaignlog->campaign_id         = $request->campaign_id;
+                    $campaignlog->campaign_info       = $request->campaign_info;
+                    $campaignlog->id_log              = $request->id_log;
+                    $campaignlog->url_referer_encrypt = $request->url_referer_encrypt;
+                    $campaignlog->url_referer_decrypt = $request->url_referer_decrypt;
+                    $campaignlog->body                = $request->body;
+                    $campaignlog->services            = $request->services;
+                    $campaignlog->params              = $request->params;
+                    $campaignlog->event               = $request->event;
+                    $campaignlog->ip_info             = $request->ip_info;
+                    $campaignlog->save();
+                    return $this->successResponse($validator->fails(),'Log guardado.', 201);
+                }else{
+                    return $this->errorResponse($validator->errors(), 404);
+                }
+            }else{
+                return $this->errorResponse('La campaña no fue encontrada o no pertenece a este usuario.', 404);
+            }
+        }
+        catch(\Exception $e){
+            return $this->errorResponse('Error se sistema. Algunos de los parámateros enviados no existen o no poseen el formato correcto.', 404);
+            //return $this->errorResponse($e, 404);
+        }
+    }
+
+    public function update(Request $request){
+        try{
+            $data = App\CampaignLog::
+            where('usuario_id', auth('api')->user()->id)
+                ->where('campaign_id', $request->campaign_id)
+                ->where('id_log',      $request->id_log)
+                ->where('event',       $request->event)
+                ->orderBy('created_at', 'DESC')
+                ->first() ?? false;
+            if($data){
+                $validator = Validator::make($request->all(), [
+                    'campaign_info'       => 'required'
+                ]);
+                if(!$validator->fails()){
+                    //modifico log
+                    $data->campaign_info = $request->campaign_info;
+                    $data->save();
+                    return $this->successResponse($validator->fails(),'Log modificado.', 201);
+                }else{
+                    return $this->errorResponse($validator->errors(), 404);
+                }
+            }else{
+                return $this->errorResponse('Log no modificado', 404);
+            }
+
+        }
+        catch(\Exception $e){
+            return $this->errorResponse('Error se sistema. Algunos de los parámateros enviados no existen o no poseen el formato correcto.', 404);
+            //return $this->errorResponse($e, 404);
+        }
+    }
+
+    public function info(Request $request){
+        try{
+
+            $data = App\CampaignLog::
+            where('usuario_id', auth('api')->user()->id)
+                ->where('campaign_id', $request->campaign_id)
+                ->where('id_log', $request->id_log)
+                ->orderBy('created_at', 'DESC')
+                ->first() ?? false;
+            if($data){
+                $data->params   = json_decode($data->params,true);
+                $data->services = json_decode($data->services,true);
+                return $this->successResponse($data,'Log encontrado', 302);
+            }else{
+                return $this->errorResponse('Log no encontrado', 404);
+            }
+        }
+        catch(\Exception $e){
+            return $this->errorResponse('Error se sistema. Algunos de los parámateros enviados no existen o no poseen el formato correcto.', 404);
+            //return $this->errorResponse($e, 404);
+        }
+    }
+
+    public function imagesUpload(Request $request){
+        try{
+            $allowedfileExtension=['jpg','png'];
+            if($request->hasFile('photo') && $request->has('id_log')) {
+                $image     = $request->file('photo');
+                $extension = $image->getClientOriginalExtension();
+                $fileName  = $request->id_log.'-'.date('YmdHis').'-'.uniqid().'.'.$extension;
+                if(in_array($extension,$allowedfileExtension)){
+                    $destinationPath = base_path() . '/public/storage/uploads/campaign/log/' . $request->id_log;
+                    $image->move($destinationPath, $fileName);
+                    $attributes['image'] = $fileName;
+                }
+            }
+            return $this->successResponse($fileName,'Imagen almacenada', 302);
+        }
+        catch(\Exception $e){
+            return $this->errorResponse('Error en la subida de imágenes.', 404);
+            //return $this->errorResponse($e, 404);
+        }
+    }
+}

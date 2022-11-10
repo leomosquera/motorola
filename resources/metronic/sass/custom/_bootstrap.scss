@@ -1,0 +1,29 @@
+/** modals */
+.modal-h80 .modal-dialog, .modal-h80 .modal-content {
+    height: 80% !important;
+}
+.modal-h80 .modal-body {
+    max-height: calc(100% - 120px) !important;
+    overflow-y: scroll !important;
+}
+
+/** carrousel images */
+.carousel-images{
+    height: 100% !important;
+}
+
+.carousel-images .carousel-inner{
+    height: 100% !important;
+}
+
+.carousel-images .carousel-inner .carousel-item {
+    height: 100% !important;
+    background-color: #a7a7a7;
+    background-size: auto 100%;
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+.carousel-control-prev, .carousel-control-next {
+    width: 5%;
+}

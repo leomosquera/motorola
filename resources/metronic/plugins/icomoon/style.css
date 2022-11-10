@@ -1,0 +1,36 @@
+@font-face {
+  font-family: 'icomoon';
+  src:  url('fonts/icomoon/icomoon.eot?bog5sy');
+  src:  url('fonts/icomoon/icomoon.eot?bog5sy#iefix') format('embedded-opentype'),
+    url('fonts/icomoon/icomoon.ttf?bog5sy') format('truetype'),
+    url('fonts/icomoon/icomoon.woff?bog5sy') format('woff'),
+    url('fonts/icomoon/icomoon.svg?bog5sy#icomoon') format('svg');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+[class^="icomoon-"], [class*=" icomoon-"] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'icomoon' !important;
+  speak: never;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icomoon-boat:before {
+  content: "\e900";
+}
+.icomoon-car-crash:before {
+  content: "\e902";
+}
+.icomoon-car:before {
+  content: "\e901";
+}

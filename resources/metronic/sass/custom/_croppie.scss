@@ -1,0 +1,20 @@
+/** croppie*/
+.croppie-upload-msg {
+	position: absolute;
+	display: flex;
+	background-color: #fff;
+	text-align: center;
+	font-size: 1rem;
+	border: 1px solid #aaa;
+	left: 50%;
+	z-index: 2;
+}
+
+.croppie-upload-msg p {
+    margin: auto;
+    text-align: center;
+}
+
+.croppie-upload-msg p i{
+    font-size: 4rem;
+}
