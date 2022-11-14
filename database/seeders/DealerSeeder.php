@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use App\Models\Dealer;
 use App\Models;
 use App;
@@ -36,6 +37,7 @@ class DealerSeeder extends Seeder
             $store->dealer_id = $data->id;
             $store->status    = 1;
             $store->name      = $data->name.' '.$i;
+            $store->uniqueid  = Str::uuid()->toString();
             $store->code      = $data->code.$i;
             $store->contact   = '';
             $store->email     = substr($data->email, 0, strpos($data->email, '@')).'.'.$i.'@motorola.com.ar';
@@ -59,6 +61,7 @@ class DealerSeeder extends Seeder
             $store->dealer_id = $data->id;
             $store->status    = 1;
             $store->name      = $data->name.' '.$i;
+            $store->uniqueid  = Str::uuid()->toString();
             $store->code      = $data->code.$i;
             $store->contact   = '';
             $store->email     = substr($data->email, 0, strpos($data->email, '@')).'.'.$i.'@motorola.com.ar';
@@ -82,6 +85,7 @@ class DealerSeeder extends Seeder
             $store->dealer_id = $data->id;
             $store->status    = 1;
             $store->name      = $data->name.' '.$i;
+            $store->uniqueid  = Str::uuid()->toString();
             $store->code      = $data->code.$i;
             $store->contact   = '';
             $store->email     = substr($data->email, 0, strpos($data->email, '@')).'.'.$i.'@motorola.com.ar';

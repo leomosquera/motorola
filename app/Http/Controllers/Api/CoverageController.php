@@ -9,43 +9,21 @@ use App\Models;
 class CoverageController extends ApiController
 {
     public function info(Request $request){
+        try{
 
-        $data = [
-            [
-                'id'           => 1,
-                'code'         => 'RD',
-                'title'        => 'Full Protection - Robo + Accidente',
-                'duration'     => 12,
-                'payment_type' => 'pago único',
-                'description'  => '12 meses de cobertura, Pago único del seguro, Cobertura frente a daños accidentales, Cobertura frente a robos'
-            ],
-            [
-                'id'           => 2,
-                'code'         => 'RD',
-                'title'        => 'Full Protection - Robo + Accidente',
-                'duration'     => 24,
-                'payment_type' => 'pago único',
-                'description'  => '24 meses de cobertura, Pago único del seguro, Cobertura frente a daños accidentales, Cobertura frente a robos'
-            ],
-            [
-                'id'           => 3,
-                'code'         => 'AD',
-                'title'        => 'Accident Protection - Accidente',
-                'duration'     => 12,
-                'payment_type' => 'pago único',
-                'description'  => '12 meses de cobertura, Pago único del seguro, Cobertura frente a daños accidentales, Cobertura frente a robos'
-            ],
-            [
-                'id'           => 4,
-                'code'         => 'AD',
-                'title'        => 'Accident Protection - Accidente',
-                'duration'     => 24,
-                'payment_type' => 'pago único',
-                'description'  => '24 meses de cobertura, Pago único del seguro, Cobertura frente a daños accidentales, Cobertura frente a robos'
-            ],
-        ];
-
-        return $this->successResponse($data,'Lista de Coberturas', 302);
-
+            $data = Models\Coverage::where('status', 1)
+                ->orderBy('id', 'ASC')
+                ->select('code','title','duration','payment_type','description')
+                ?? false;
+            if($data){
+                return $this->successResponse($data->get(),'Lista de coberturas', 302);
+            }else{
+                return $this->errorResponse('Sin coberturas', 404);
+            }
+        }
+        catch(\Exception $e){
+            return $this->errorResponse('Error de sistema. Algunos de los parámateros enviados no existen o no poseen el formato correcto.', 404);
+            //return $this->errorResponse($e, 404);
+        }
     }
 }

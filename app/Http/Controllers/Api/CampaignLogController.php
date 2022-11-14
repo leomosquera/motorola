@@ -2,16 +2,18 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
+use App\Models\Image;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
+use App\Models;
 
-class CampaignLogController extends Controller
+class CampaignLogController extends ApiController
 {
     public function store(Request $request){
         try{
             //campaña pertenece al usuario?
-            $data = App\Campaign::where('id', $request->campaign_id)->where('usuario_id', auth('api')->user()->id)->first() ?? false;
-
+            $data = Models\Campaign::where('id', $request->campaign_id)->where('usuario_id', auth('api')->user()->id)->first() ?? false;
             if($data){
                 //valido request
                 $request->params = json_encode($request->params);
@@ -28,7 +30,7 @@ class CampaignLogController extends Controller
 
                 if(!$validator->fails()){
                     //guardo log
-                    $campaignlog =                    new App\CampaignLog();
+                    $campaignlog =                    new Models\CampaignLog();
                     $campaignlog->usuario_id          = auth('api')->user()->id;
                     $campaignlog->campaign_id         = $request->campaign_id;
                     $campaignlog->campaign_info       = $request->campaign_info;
@@ -50,14 +52,14 @@ class CampaignLogController extends Controller
             }
         }
         catch(\Exception $e){
-            return $this->errorResponse('Error se sistema. Algunos de los parámateros enviados no existen o no poseen el formato correcto.', 404);
+            return $this->errorResponse('Error de sistema. Algunos de los parámateros enviados no existen o no poseen el formato correcto.', 404);
             //return $this->errorResponse($e, 404);
         }
     }
 
     public function update(Request $request){
         try{
-            $data = App\CampaignLog::
+            $data = Models\CampaignLog::
             where('usuario_id', auth('api')->user()->id)
                 ->where('campaign_id', $request->campaign_id)
                 ->where('id_log',      $request->id_log)
@@ -82,15 +84,14 @@ class CampaignLogController extends Controller
 
         }
         catch(\Exception $e){
-            return $this->errorResponse('Error se sistema. Algunos de los parámateros enviados no existen o no poseen el formato correcto.', 404);
+            return $this->errorResponse('Error de sistema. Algunos de los parámateros enviados no existen o no poseen el formato correcto.', 404);
             //return $this->errorResponse($e, 404);
         }
     }
 
     public function info(Request $request){
         try{
-
-            $data = App\CampaignLog::
+            $data = Models\CampaignLog::
             where('usuario_id', auth('api')->user()->id)
                 ->where('campaign_id', $request->campaign_id)
                 ->where('id_log', $request->id_log)
@@ -105,7 +106,27 @@ class CampaignLogController extends Controller
             }
         }
         catch(\Exception $e){
-            return $this->errorResponse('Error se sistema. Algunos de los parámateros enviados no existen o no poseen el formato correcto.', 404);
+            return $this->errorResponse('Error de sistema. Algunos de los parámateros enviados no existen o no poseen el formato correcto.', 404);
+            //return $this->errorResponse($e, 404);
+        }
+    }
+
+    public function infoByIdlog($id_log = null, Request $request){
+        try{
+            $data = Models\CampaignLog::
+            where('id_log', urldecode($request->id_log))
+                ->orderBy('created_at', 'DESC')
+                ->first() ?? false;
+            if($data){
+                $data->params   = json_decode($data->params,true);
+                $data->services = json_decode($data->services,true);
+                return $this->successResponse($data,'Log encontrado', 302);
+            }else{
+                return $this->errorResponse('Log no encontrado', 404);
+            }
+        }
+        catch(\Exception $e){
+            return $this->errorResponse('Error de sistema. Algunos de los parámateros enviados no existen o no poseen el formato correcto.', 404);
             //return $this->errorResponse($e, 404);
         }
     }

@@ -24,7 +24,7 @@ class CampaignSeeder extends Seeder
         $data->status           = 1;
         $data->name             = 'Moto Care';
         $data->date_start       = '2022-11-05';
-        $data->date_end         = '2022-11-25';
+        $data->date_end         = '2024-11-05';
         $data->url              = 'https://motorola.test';
         $data->privacy_policy   = '';
         $data->terms_conditions = '';

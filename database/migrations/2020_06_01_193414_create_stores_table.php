@@ -19,6 +19,7 @@ class CreateStoresTable extends Migration
             $table->unsignedBigInteger('dealer_id'); // Relación con dealer
             $table->foreign('dealer_id')->references('id')->on('dealers');
             $table->string('name',100);
+            $table->string('uniqueid',100);
             $table->string('code',100);
             $table->string('contact',100);
             $table->string('email',100)->nullable();

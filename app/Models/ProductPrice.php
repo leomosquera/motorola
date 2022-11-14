@@ -23,4 +23,5 @@ class ProductPrice extends Model
     public function product(){
         return $this->belongsTo(Models\Product::class, 'product_id', 'id'); // Uno a muchos
     }
+
 }

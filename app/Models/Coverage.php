@@ -4,21 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Dealer;
 
-class Store extends Model
+class Coverage extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'status', 'dealer_id', 'name', 'uniqueid', 'code', 'contact', 'email', 'phone', 'image'
+        'status', 'code', 'title', 'duration', 'payment_type', 'description'
     ];
 
     protected $guarded = [
         'id', 'created_at', 'updated_at'
     ];
-
-    public function dealer(){
-        return $this->belongsTo(Dealer::class, 'dealer_id', 'id'); // Uno a muchos
-    }
 }
