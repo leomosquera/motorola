@@ -19,6 +19,8 @@ class CreateCampaignLogsTable extends Migration
             $table->foreign('usuario_id')->references('id')->on('usuarios');
             $table->unsignedBigInteger('campaign_id'); // Relación con campaña
             $table->foreign('campaign_id')->references('id')->on('campaigns');
+            $table->unsignedBigInteger('store_id'); // Relación con stores / tiendas
+            $table->foreign('store_id')->references('id')->on('stores');
             $table->json('campaign_info')->nullable();
             $table->string('id_log',100);
             $table->string('url_referer_encrypt',1000)->nullable();

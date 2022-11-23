@@ -22,7 +22,7 @@ class ProductSeeder extends Seeder
 
         Product::truncate(); // Evita duplicar datos
 
-        $json = Storage::get('base/migration/products_kps.json');
+        $json = Storage::get('base/migration/motocare_product.json');
         $json = json_decode($json, true);
 
         foreach ($json as $valor){

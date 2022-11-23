@@ -19,34 +19,34 @@ class CoverageSeeder extends Seeder
             [
                 'id'           => 1,
                 'code'         => 'RD',
-                'title'        => 'Full Protection - Robo + Accidente',
+                'title'        => 'Seguro de Robo + Accidente',
                 'duration'     => 12,
                 'payment_type' => 'pago único',
-                'description'  => '12 meses de cobertura, Pago único del seguro, Cobertura frente a daños accidentales, Cobertura frente a robos'
+                'description'  => 'ok**12 meses de cobertura|ok**Cobertura frente a daños accidentales|ok**Cobertura frente a robos'
             ],
             [
                 'id'           => 2,
                 'code'         => 'RD',
-                'title'        => 'Full Protection - Robo + Accidente',
+                'title'        => 'Seguro de Robo + Accidente',
                 'duration'     => 24,
                 'payment_type' => 'pago único',
-                'description'  => '24 meses de cobertura, Pago único del seguro, Cobertura frente a daños accidentales, Cobertura frente a robos'
+                'description'  => 'ok**24 meses de cobertura|ok**Cobertura frente a daños accidentales|ok**Cobertura frente a robos'
             ],
             [
                 'id'           => 3,
                 'code'         => 'AD',
-                'title'        => 'Accident Protection - Accidente',
+                'title'        => 'Seguro de Accidente',
                 'duration'     => 12,
                 'payment_type' => 'pago único',
-                'description'  => '12 meses de cobertura, Pago único del seguro, Cobertura frente a daños accidentales, Cobertura frente a robos'
+                'description'  => 'ok**12 meses de cobertura|ok**Cobertura frente a daños accidentales|no**Cobertura frente a robos'
             ],
             [
                 'id'           => 4,
                 'code'         => 'AD',
-                'title'        => 'Accident Protection - Accidente',
+                'title'        => 'Seguro de Accidente',
                 'duration'     => 24,
                 'payment_type' => 'pago único',
-                'description'  => '24 meses de cobertura, Pago único del seguro, Cobertura frente a daños accidentales, Cobertura frente a robos'
+                'description'  => 'ok**24 meses de cobertura|ok**Cobertura frente a daños accidentales|no**Cobertura frente a robos'
             ]
         ];
 

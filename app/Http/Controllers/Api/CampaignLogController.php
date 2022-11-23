@@ -14,10 +14,13 @@ class CampaignLogController extends ApiController
         try{
             //campaña pertenece al usuario?
             $data = Models\Campaign::where('id', $request->campaign_id)->where('usuario_id', auth('api')->user()->id)->first() ?? false;
-            if($data){
+            //store / tienda
+            $store = Models\Store::where('uniqueid', $request->store)->first() ?? false;
+            if($data && $store){
                 //valido request
                 $request->params = json_encode($request->params);
                 $validator = Validator::make($request->all(), [
+                    'store'              => 'required|max:100',
                     'campaign_id'         => 'required|integer',
                     'campaign_info'       => 'required',
                     'id_log'              => 'required|max:100',
@@ -33,6 +36,7 @@ class CampaignLogController extends ApiController
                     $campaignlog =                    new Models\CampaignLog();
                     $campaignlog->usuario_id          = auth('api')->user()->id;
                     $campaignlog->campaign_id         = $request->campaign_id;
+                    $campaignlog->store_id            = $store->id;
                     $campaignlog->campaign_info       = $request->campaign_info;
                     $campaignlog->id_log              = $request->id_log;
                     $campaignlog->url_referer_encrypt = $request->url_referer_encrypt;

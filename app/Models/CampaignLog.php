@@ -12,7 +12,7 @@ class CampaignLog extends Model
     use HasFactory;
 
     protected $fillable = [
-        'usuario_id', 'campaign_id', 'campaign_info', 'id_log', 'url_referer_encrypt', 'url_referer_decrypt', 'body', 'services', 'params', 'event', 'ip_info'
+        'usuario_id', 'campaign_id', 'store_id', 'campaign_info', 'id_log', 'url_referer_encrypt', 'url_referer_decrypt', 'body', 'services', 'params', 'event', 'ip_info'
     ];
 
     protected $guarded = [
@@ -25,5 +25,9 @@ class CampaignLog extends Model
 
     public function campaign(){
         return $this->belongsTo(Models\Campaign::class, 'campaign_id', 'id'); // Uno a muchos
+    }
+
+    public function store(){
+        return $this->belongsTo(Models\Store::class, 'store_id', 'id'); // Uno a muchos
     }
 }

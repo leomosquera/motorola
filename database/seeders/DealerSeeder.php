@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Str;
 use App\Models\Dealer;
 use App\Models;
 use App;
@@ -27,72 +26,30 @@ class DealerSeeder extends Seeder
         $data->name    = 'Group Mobile';
         $data->code    = 'MO07';
         $data->contact = '';
-        $data->email   = 'group.mobile@motorola.com.ar';
-        $data->phone   = '11123456789';
+        $data->email   = 'group.mobile@motocare.com.ar';
+        $data->phone   = '1111111111111';
         $data->image   = '';
         $data->save();
-
-        for($i=1; $i<=14; $i++){
-            $store = new Models\Store();
-            $store->dealer_id = $data->id;
-            $store->status    = 1;
-            $store->name      = $data->name.' '.$i;
-            $store->uniqueid  = Str::uuid()->toString();
-            $store->code      = $data->code.$i;
-            $store->contact   = '';
-            $store->email     = substr($data->email, 0, strpos($data->email, '@')).'.'.$i.'@motorola.com.ar';
-            $store->phone     = $data->phone.$i;
-            $store->image     = '';
-            $store->save();
-        }
 
         $data = new Dealer();
         $data->status  = 1;
         $data->name    = 'ICH';
         $data->code    = 'MO08';
         $data->contact = '';
-        $data->email   = 'ich@motorola.com.ar';
-        $data->phone   = '11123456789';
+        $data->email   = 'ich@motocare.com.ar';
+        $data->phone   = '1111111111111';
         $data->image   = '';
         $data->save();
-
-        for($i=1; $i<=3; $i++){
-            $store = new Models\Store();
-            $store->dealer_id = $data->id;
-            $store->status    = 1;
-            $store->name      = $data->name.' '.$i;
-            $store->uniqueid  = Str::uuid()->toString();
-            $store->code      = $data->code.$i;
-            $store->contact   = '';
-            $store->email     = substr($data->email, 0, strpos($data->email, '@')).'.'.$i.'@motorola.com.ar';
-            $store->phone     = $data->phone.$i;
-            $store->image     = '';
-            $store->save();
-        }
 
         $data = new Dealer();
         $data->status  = 1;
         $data->name    = 'Grupo Móvil / del Litoral';
         $data->code    = 'MO09';
         $data->contact = '';
-        $data->email   = 'grupo.movil.del.litoral@motorola.com.ar';
-        $data->phone   = '11123456789';
+        $data->email   = 'grupo.movil.del.litoral@motocare.com.ar';
+        $data->phone   = '1111111111111';
         $data->image   = '';
         $data->save();
-
-        for($i=1; $i<=3; $i++){
-            $store = new Models\Store();
-            $store->dealer_id = $data->id;
-            $store->status    = 1;
-            $store->name      = $data->name.' '.$i;
-            $store->uniqueid  = Str::uuid()->toString();
-            $store->code      = $data->code.$i;
-            $store->contact   = '';
-            $store->email     = substr($data->email, 0, strpos($data->email, '@')).'.'.$i.'@motorola.com.ar';
-            $store->phone     = $data->phone.$i;
-            $store->image     = '';
-            $store->save();
-        }
 
         Schema::enableForeignKeyConstraints();//Habilito Foreign Key
     }

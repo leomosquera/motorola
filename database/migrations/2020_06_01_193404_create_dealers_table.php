@@ -17,7 +17,7 @@ class CreateDealersTable extends Migration
         $table->bigIncrements('id');
         $table->boolean('status')->default(0);
         $table->string('name',100);
-        $table->string('code',100);
+        $table->string('code',10);
         $table->string('contact',100);
         $table->string('email',100)->nullable();
         $table->string('phone',50)->nullable();
