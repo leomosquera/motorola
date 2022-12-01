@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use App\Models;
 use App\Models\Product;
 use Storage;
@@ -29,7 +30,7 @@ class ProductSeeder extends Seeder
             if (array_key_exists('Product SKU', $valor)) {
 
                 $data   = Models\Product::where('sku', $valor['Product SKU'])->first() ?? false;
-                $family = Models\ProductFamily::where('name', $valor['Product Family'])->first() ?? false;
+                $family = Models\ProductFamily::where('name', $valor['Product Name'])->first() ?? false;
                 if(!$data){
                     $data = new Models\Product();
                     $data->product_type_id = 1;
@@ -46,8 +47,11 @@ class ProductSeeder extends Seeder
                 $data_price->product_id = $data->id;
                 $data_price->coverage = $valor['Cobertura'];
                 $data_price->duration = $valor['Duracion'];
-                $data_price->idnewsanmotocare = $valor['ID Newsan Motocare'];
-                $data_price->price_gross = (float)$valor['PRECIO BRUTO EQUIPO'];
+                $data_price->idnewsanmotocare = Str::uuid()->toString();
+                //$data_price->price_gross = (float)$valor['PRECIO BRUTO EQUIPO'];
+                $data_price->price_min = (float)$valor['PRECIO MINIMO'];
+                $data_price->price_max = (float)$valor['PRECIO MAXIMO'];
+                $data_price->price_abm = (float)$valor['PREMIO ABM INTERNO'];
                 $data_price->price_insured = (float)$valor['Precio Seguro Actualizado'];
                 $data_price->price_deductible = (float)$valor['DEDUCIBLE'];
                 $data_price->save();

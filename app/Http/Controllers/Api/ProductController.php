@@ -71,6 +71,8 @@ class ProductController extends ApiController
             cv.description as coverage_description
             ') ?? false;
 
+            $mp = Models\MpStarus::where('id', '>', 0);
+
             if($data){
                 return $this->successResponse($data->get(),'Lista de productos', 302);
             }else{

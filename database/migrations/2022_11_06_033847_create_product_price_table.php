@@ -18,8 +18,11 @@ class CreateProductPriceTable extends Migration
             $table->foreign('product_id', 'fk_priceproduct_price')->references('id')->on('products')->onDelete('cascade');
             $table->string('coverage',20)->nullable();
             $table->Integer('duration')->default(0);
-            $table->string('idnewsanmotocare',50)->nullable();
+            $table->string('idnewsanmotocare',100)->nullable();
             $table->decimal('price_gross',9,2)->default(0.00);
+            $table->decimal('price_min',9,2)->default(0.00);
+            $table->decimal('price_max',9,2)->default(0.00);
+            $table->decimal('price_abm',9,2)->default(0.00);
             $table->decimal('price_insured',9,2)->default(0.00);
             $table->decimal('price_deductible',9,2)->default(0.00);
             $table->timestamps();

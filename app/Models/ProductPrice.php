@@ -13,7 +13,7 @@ class ProductPrice extends Model
     protected $table = 'product_price';
 
     protected $fillable = [
-       'product_id', 'coverage', 'duration', 'idnewsanmotocare', 'price_gross', 'price_insured', 'price_deductible'
+       'product_id', 'coverage', 'duration', 'idnewsanmotocare', 'price_gross', 'price_min', 'price_max', 'price_abm', 'price_insured', 'price_deductible'
     ];
 
     protected $guarded = [

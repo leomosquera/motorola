@@ -16,11 +16,11 @@ class AssurantEstadoCivilSeeder extends Seeder
     {
         //servicio assurant
         $estado_civil = [
-            ['cod' => 'SOL', 'desc' => 'SOLTERO/A'],
-            ['cod' => 'CAS', 'desc' => 'CASADO/A'],
-            ['cod' => 'CON', 'desc' => 'CONVIVIENTE'],
-            ['cod' => 'SEP', 'desc' => 'SEPARADO/A'],
-            ['cod' => 'VIU', 'desc' => 'VIUDO/A']
+            ['cod' => '01', 'desc' => 'Casado/a'],
+            ['cod' => '02', 'desc' => 'Divorciado/a'],
+            ['cod' => '03', 'desc' => 'Soltero/a'],
+            ['cod' => '04', 'desc' => 'Viudo/a'],
+            ['cod' => '00', 'desc' => 'Otros']
         ];
 
         foreach ($estado_civil as $valor){

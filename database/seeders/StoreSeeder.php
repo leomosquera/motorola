@@ -36,7 +36,7 @@ class StoreSeeder extends Seeder
                     $data->dealer_id = $dealer->id;
                     $data->name = $valor['DESCRIPCIÓN'];
                     $data->uniqueid = Str::uuid()->toString();
-                    $data->code = $valor['Código Tienda'];
+                    $data->code = $valor['Branch Code'];
                     $data->contact = null;
                     $data->email = null;
                     $data->phone = null;

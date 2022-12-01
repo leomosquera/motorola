@@ -25,10 +25,10 @@ class ProductFamilySeeder extends Seeder
         $json = json_decode($json, true);
 
         foreach ($json as $valor){
-            if (array_key_exists('Product Family', $valor)) {
-                if(!ProductFamily::where('name', $valor['Product Family'])->first() ?? false){
+            if (array_key_exists('Product Name', $valor)) {
+                if(!ProductFamily::where('name', $valor['Product Name'])->first() ?? false){
                     $data = new ProductFamily();
-                    $data->name = $valor['Product Family'];
+                    $data->name = $valor['Product Name'];
                     $data->save();
                 }
             }
