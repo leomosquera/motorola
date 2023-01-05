@@ -20,7 +20,7 @@ class CampaignLogController extends ApiController
                 //valido request
                 $request->params = json_encode($request->params);
                 $validator = Validator::make($request->all(), [
-                    'store'              => 'required|max:100',
+                    'store'               => 'required|max:100',
                     'campaign_id'         => 'required|integer',
                     'campaign_info'       => 'required',
                     'id_log'              => 'required|max:100',

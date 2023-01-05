@@ -35,7 +35,7 @@ class ProductSeeder extends Seeder
                     $data = new Models\Product();
                     $data->product_type_id = 1;
                     $data->product_family_id = $family->id;
-                    $data->status = 1;
+                    $data->status = trim($valor['DISCONTINUADOS']) == 'OK' && (float)$valor['PRECIO BRUTO EQUIPO'] > 0 && (float)$valor['PRECIO MINIMO'] > 0 && (float)$valor['PRECIO MAXIMO'] > 0 && (float)$valor['PREMIO ABM INTERNO'] > 0 && (float)$valor['Precio Seguro Actualizado'] > 0 && (float)$valor['DEDUCIBLE'] > 0 ? 1 : 0;
                     $data->sku = $valor['Product SKU'];
                     $data->elita = $valor['PRODUCT CODE ELITA'];
                     $data->name = $valor['Product Name'];
@@ -47,8 +47,8 @@ class ProductSeeder extends Seeder
                 $data_price->product_id = $data->id;
                 $data_price->coverage = $valor['Cobertura'];
                 $data_price->duration = $valor['Duracion'];
-                $data_price->idnewsanmotocare = Str::uuid()->toString();
-                //$data_price->price_gross = (float)$valor['PRECIO BRUTO EQUIPO'];
+                $data_price->idnewsanmotocare = strlen($valor['ID Newsan Motocare']) > 0 ? $valor['ID Newsan Motocare'] : Str::uuid()->toString();
+                $data_price->price_gross = (float)$valor['PRECIO BRUTO EQUIPO'];
                 $data_price->price_min = (float)$valor['PRECIO MINIMO'];
                 $data_price->price_max = (float)$valor['PRECIO MAXIMO'];
                 $data_price->price_abm = (float)$valor['PREMIO ABM INTERNO'];

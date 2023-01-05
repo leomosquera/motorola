@@ -24,7 +24,7 @@ Route::group(['prefix' => 'auth'],
 );
 Route::group(['middleware' => 'auth:api'],
     function() {
-        Route::get('campaign/{id?}',                   [Controllers\Api\CampaignController::class, 'campaign']);
+        Route::get('campaign/{id?}/{store}',           [Controllers\Api\CampaignController::class, 'campaign']);
         Route::get('campaign/log/info',                [Controllers\Api\CampaignLogController::class, 'info']);
         Route::get('campaign/log/info/idlog/{id_log?}',[Controllers\Api\CampaignLogController::class, 'infoByIdlog']);
         Route::put('campaign/log/store',               [Controllers\Api\CampaignLogController::class, 'store']);
