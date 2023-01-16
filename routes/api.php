@@ -29,6 +29,7 @@ Route::group(['middleware' => 'auth:api'],
         Route::get('campaign/log/info/idlog/{id_log?}',[Controllers\Api\CampaignLogController::class, 'infoByIdlog']);
         Route::put('campaign/log/store',               [Controllers\Api\CampaignLogController::class, 'store']);
         Route::put('campaign/log/update',              [Controllers\Api\CampaignLogController::class, 'update']);
+        Route::put('campaign/log/payment',             [Controllers\Api\CampaignLogController::class, 'payment']);
         Route::get('coverage',                         [Controllers\Api\CoverageController::class, 'info']);
         Route::get('products/name',                    [Controllers\Api\ProductController::class, 'productName']);
         Route::get('products/byname/{name?}',          [Controllers\Api\ProductController::class, 'productByName']);

@@ -39,6 +39,7 @@ class CampaignLogController extends ApiController
                     $campaignlog->store_id            = $store->id;
                     $campaignlog->campaign_info       = $request->campaign_info;
                     $campaignlog->id_log              = $request->id_log;
+                    $campaignlog->payment_code        = strpos($request->event, 'payment') !== false ? 'MP' : null;
                     $campaignlog->url_referer_encrypt = $request->url_referer_encrypt;
                     $campaignlog->url_referer_decrypt = $request->url_referer_decrypt;
                     $campaignlog->body                = $request->body;
@@ -127,6 +128,49 @@ class CampaignLogController extends ApiController
                 return $this->successResponse($data,'Log encontrado', 302);
             }else{
                 return $this->errorResponse('Log no encontrado', 404);
+            }
+        }
+        catch(\Exception $e){
+            return $this->errorResponse('Error de sistema. Algunos de los parámateros enviados no existen o no poseen el formato correcto.', 404);
+            //return $this->errorResponse($e, 404);
+        }
+    }
+
+    public function payment(Request $request){
+        try{
+            //log by id_log
+            $exist = Models\CampaignLog::where('id_log', $request->id_log)->where(function($query) {
+                $query->where('event','payment_approved');
+            })->latest()->first() ?? false;                
+            
+            if(!$exist){
+                $data  = Models\CampaignLog::where('id_log', $request->id_log)->latest()->first() ?? false;
+                if($data){
+                    //guardo respuesta de la pasarela de pago
+                    $services = json_decode($data->services,true);
+                    $services['payment'] = $request->services;
+                    //guardo log
+                    $campaignlog =                    new Models\CampaignLog();
+                    $campaignlog->usuario_id          = auth('api')->user()->id;
+                    $campaignlog->campaign_id         = $data->campaign_id;
+                    $campaignlog->store_id            = $data->store_id;
+                    $campaignlog->campaign_info       = $data->campaign_info;
+                    $campaignlog->id_log              = $data->id_log;
+                    $campaignlog->payment_code        = $data->payment_code;
+                    $campaignlog->url_referer_encrypt = $data->url_referer_encrypt;
+                    $campaignlog->url_referer_decrypt = $data->url_referer_decrypt;
+                    $campaignlog->body                = null;
+                    $campaignlog->services            = json_encode($services);
+                    $campaignlog->params              = $data->params;
+                    $campaignlog->event               = 'payment_'.$request->status;
+                    $campaignlog->ip_info             = $data->ip_info;
+                    $campaignlog->save();
+                    return $this->successResponse(true,'Log guardado.', 201);
+                }else{
+                    return $this->errorResponse('El log no fue encontrado o no pertenece a este usuario.', 404);
+                }
+            }else{
+                return $this->errorResponse('El pago para esta operación ya fue procesado.', 404);
             }
         }
         catch(\Exception $e){

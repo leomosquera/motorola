@@ -23,6 +23,7 @@ class CreateCampaignLogsTable extends Migration
             $table->foreign('store_id')->references('id')->on('stores');
             $table->json('campaign_info')->nullable();
             $table->string('id_log',100);
+            $table->string('payment_code',10)->nullable();
             $table->string('url_referer_encrypt',1000)->nullable();
             $table->string('url_referer_decrypt',1000)->nullable();
             $table->json('body')->nullable();
