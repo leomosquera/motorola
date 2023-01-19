@@ -14,6 +14,27 @@ use Storage;
 class HomeController extends Controller
 {
 
+    public function stores(){
+        $info = [];
+        $dealers = Models\Dealer::where('status',1)->orderBy('name','ASC');
+        foreach ($dealers->get() as $dealer){
+            $info_store = [];
+            $stores = Models\Store::where('status',1)->where('dealer_id',$dealer->id)->orderBy('name','ASC');
+            foreach ($stores->get() as $store){
+                array_push($info_store,[
+                    'name' => $store->name,
+                    'code' => $store->code,
+                    'url'  => 'https://proteccionmobile.com.ar/?'.base64_encode($store->uniqueid)
+                ]);
+            }
+            array_push($info,[
+                'name' => $dealer->name,
+                'stores' => $info_store
+            ]);
+        }
+        return view('/pages/stores', ['info'=>$info]);
+    }
+
     public function pruebas(){
         $count = 0;
         $inspcar = Models\InspectionCar::where('_id','8gfe4z81eoowckkgoogkkcg0')->first() ?? false;

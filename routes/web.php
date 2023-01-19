@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Login
+/*
 Route::get( 'login',  'LoginController@index')->name('login');
 Route::post('login',  'LoginController@login')->name('login-post');
 Route::post('logout', 'LoginController@logout')->name('login-logout');
@@ -22,7 +23,11 @@ Route::post('logout', 'LoginController@logout')->name('login-logout');
 Route::get( '404', 'PageController@error404')->name('404');
 Route::get( '419', 'PageController@error419')->name('419');
 Route::get( '/pruebas', 'HomeController@pruebas')->name('pruebas');
+*/
 
+//Stores
+Route::get( '/stores', 'HomeController@stores')->name('stores');
+/*
 // Home
 Route::get( '/',                   'HomeController@index')->name('home')->middleware('auth');
 Route::get( '/login-role',         'HomeController@loginRole')->name('login-role')->middleware('auth');
@@ -113,3 +118,4 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'superadmin']], func
     // Tools
     Route::get('tools/zip/inspection/car/{id?}', 'Tools\ZipFilesController@inspCar')->name('tools-zip-inspection-car');
 });
+*/

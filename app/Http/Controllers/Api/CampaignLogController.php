@@ -165,7 +165,7 @@ class CampaignLogController extends ApiController
                     $campaignlog->event               = 'payment_'.$request->status;
                     $campaignlog->ip_info             = $data->ip_info;
                     $campaignlog->save();
-                    return $this->successResponse(true,'Log guardado.', 201);
+                    return $this->successResponse($request->status,'Log guardado.', 201);
                 }else{
                     return $this->errorResponse('El log no fue encontrado o no pertenece a este usuario.', 404);
                 }
