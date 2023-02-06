@@ -12,6 +12,7 @@ return [
         ]
     ],
     'storage' => [
-        'temp' => 'temp/'
+        'temp'  => 'temp/',
+        'files' => 'files/'
     ]
 ];

@@ -12,7 +12,7 @@ class CampaignLog extends Model
     use HasFactory;
 
     protected $fillable = [
-        'usuario_id', 'campaign_id', 'store_id', 'campaign_info', 'id_log', 'payment_code', 'url_referer_encrypt', 'url_referer_decrypt', 'body', 'services', 'params', 'event', 'ip_info'
+        'usuario_id', 'campaign_id', 'store_id', 'campaign_info', 'id_log', 'payment_code', 'payment_verified',  'url_referer_encrypt', 'url_referer_decrypt', 'body', 'services', 'params', 'event', 'ip_info', 'file'
     ];
 
     protected $guarded = [

@@ -140,11 +140,15 @@ class CampaignLogController extends ApiController
         try{
             //log by id_log
             $exist = Models\CampaignLog::where('id_log', $request->id_log)->where(function($query) {
-                $query->where('event','payment_approved');
-            })->latest()->first() ?? false;                
-            
+                $query->where('event',['payment_approved', 'payment_rejected']);
+            })->latest()->first() ?? false;
+
             if(!$exist){
-                $data  = Models\CampaignLog::where('id_log', $request->id_log)->latest()->first() ?? false;
+                $data  = Models\CampaignLog::
+                where('id_log', $request->id_log)
+                ->where('event', 'payment_init')
+                ->latest()
+                ->first() ?? false;
                 if($data){
                     //guardo respuesta de la pasarela de pago
                     $services = json_decode($data->services,true);
@@ -157,6 +161,7 @@ class CampaignLogController extends ApiController
                     $campaignlog->campaign_info       = $data->campaign_info;
                     $campaignlog->id_log              = $data->id_log;
                     $campaignlog->payment_code        = $data->payment_code;
+                    $campaignlog->payment_verified    = 1;
                     $campaignlog->url_referer_encrypt = $data->url_referer_encrypt;
                     $campaignlog->url_referer_decrypt = $data->url_referer_decrypt;
                     $campaignlog->body                = null;
@@ -165,6 +170,10 @@ class CampaignLogController extends ApiController
                     $campaignlog->event               = 'payment_'.$request->status;
                     $campaignlog->ip_info             = $data->ip_info;
                     $campaignlog->save();
+                    //indico que el pago fue verificado desde el estado payment_init
+                    $data->payment_verified = 1;
+                    $data->save();
+                    //
                     return $this->successResponse($request->status,'Log guardado.', 201);
                 }else{
                     return $this->errorResponse('El log no fue encontrado o no pertenece a este usuario.', 404);

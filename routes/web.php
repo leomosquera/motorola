@@ -26,7 +26,9 @@ Route::get( '/pruebas', 'HomeController@pruebas')->name('pruebas');
 */
 
 //Stores
-Route::get( '/stores', 'HomeController@stores')->name('stores');
+Route::get( '/stores',               'HomeController@stores')->name('stores');
+Route::get( '/stores/history/sales', 'HomeController@storesHistorySales')->name('stores-history-sales');
+
 /*
 // Home
 Route::get( '/',                   'HomeController@index')->name('home')->middleware('auth');
