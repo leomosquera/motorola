@@ -7,10 +7,64 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Carbon;
 use Intervention\Image\ImageManagerStatic as FileImage;
 use App\Models;
+use GuzzleHttp\Client;
 use Storage;
 
 class Helper
 {
+    // Mercado Pago Buscar si el pago está aprobado según preference_id
+    public static function mpPaymentApproved($preference_id = '*'){
+        try {
+            $client = new Client();
+            $response = $client->request('GET', config('services.mercadopago.api').'merchant_orders/search', [
+                'headers' => [
+                    'Content-Type'  => 'application/json',
+                    'Authorization' => 'Bearer '.config('services.mercadopago.token')
+                ],
+                'query' => [
+                        'preference_id' => $preference_id 
+                ]
+            ]);
+            //obtengo y guardo log
+            $response_statuscode = $response->getStatusCode();
+            $response_contents   = json_decode($response->getBody()->getContents());
+            if($response_statuscode == 200 && $response_contents->elements !== null){
+                $status = false;
+                if(count($response_contents->elements)>0){
+                    //busco en todos los elementos
+                    foreach ($response_contents->elements as $element){
+                        if(count($element->payments)>0){
+                            //busco que todos los pagos estén aprobados en el elemento
+                            foreach ($element->payments as $payment){
+                                if($payment->status == 'approved'){
+                                    $status = true;
+                                }else{
+                                    break;
+                                }
+                            }
+                        }else{
+                            return false;
+                        }
+                    }
+                    return $status;
+                }else{
+                    return false;
+                }
+            }else{
+                return false;
+            }
+        } catch (Exception $e) {
+            //return \Response::json(array('status' => ['404',$e->getMessage()]));
+            return false;
+        }
+    }
+
+    // UFT-8 to ANSI
+    public static function utf8toansi($content = '')
+    {
+        return iconv( mb_detect_encoding( $content ), 'Windows-1252', $content );
+    }
+
     // layout update page config for all pages
     public static function updatePageConfig($pageConfigs)
     {

@@ -42,7 +42,7 @@ class HomeController extends Controller
         foreach ($dealers->get() as $dealer){
             $file = [
                 'dir'  => Config::get('global.storage.files'),
-                'name' => date('YmdHis').'-'.$dealer->code.'-'.time().'-'.bin2hex(random_bytes(5)).'.txt'
+                'name' => $dealer->code.date('ymd').'.txt'
             ];
             $log_count = 0;
             // Stores
@@ -52,7 +52,6 @@ class HomeController extends Controller
                 where('store_id', $store->id)
                 ->where('payment_code', 'MP')
                 ->where('event', 'payment_approved')
-                ->where('payment_verified', 0)
                 ->where('file', null)
                 ->orderBy('id', 'DESC')
                 ->with('store');
@@ -70,7 +69,7 @@ class HomeController extends Controller
                                 if($params->codarticulo->value == $price->idnewsanmotocare){
                                     $txt = 'FC¦'; //1
                                     $txt .= '¦'; //2
-                                    $txt .= substr(preg_replace('/\s+/', ' ', $product->description), 0, 50).'¦'; //3
+                                    $txt .= $product->sku.'¦'; //3
                                     $txt .= $price->price_gross.'¦';//4
                                     $txt .= '0¦'; //5
                                     $txt .= $price->duration.'¦'; //6
@@ -80,15 +79,19 @@ class HomeController extends Controller
                                     $txt .= substr($log->id_log, 0, 20).'¦'; //11
                                     $txt .= str_replace(['/','-'], ['',''], $params->fventa->value).'¦'; //12
                                     $txt .= '¦'; //13
-                                    $txt .= '¦'; //14
+                                    $txt .= $params->tndoc->value.'¦'; //14
                                     $txt .= substr(preg_replace('/\s+/', ' ', $params->nombres->value.' '.$params->apellidos->value), 0, 50).'¦'; //15
                                     $txt .= substr(preg_replace('/\s+/', ' ', $params->email->value), 0, 50).'¦'; //16
+                                    /*
                                     $txt .= substr(preg_replace('/\s+/', ' ', $params->calle->value.' '.$params->callenro->value), 0, 50).'¦'; //17
                                     $txt .= substr(preg_replace('/\s+/', ' ', $params->piso->value.' '.$params->dto->value), 0, 50).'¦'; //18
+                                    */
+                                    $txt .= substr(preg_replace('/\s+/', ' ', $params->calle->value.' '.$params->callenro->value.' '.$params->piso->value.' '.$params->dto->value), 0, 50).'¦'; //17
+                                    $txt .= $params->sujetoso->value.'¦'; //18
                                     $txt .= substr(preg_replace('/\s+/', ' ', $params->localidad->value), 0, 50).'¦'; //19
                                     $txt .= substr(preg_replace('/\s+/', ' ', $params->cp->value), 0, 25).'¦'; //20
                                     $txt .= substr(preg_replace('/\s+/', ' ', $params->provincia->value), 0, 50).'¦'; //21
-                                    $txt .= '¦'; //22
+                                    $txt .= $params->pers->value.'¦'; //22
                                     $txt .= substr(preg_replace('/\s+/', ' ', $params->tel->value), 0, 15).'¦'; //23
                                     $txt .= 'AR¦'; //24
                                     $txt .= 'AR¦'; //25
@@ -101,10 +104,15 @@ class HomeController extends Controller
                                     $txt .= substr($params->imei->value, 0, 20).'¦'; //32
                                     $txt .= '¦¦¦¦¦¦¦¦¦¦¦¦¦¦'; //33-46
                                     $txt .= substr($price->price_gross, 0, 20).'¦'; //47
-                                    $txt .= '¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦'; //48-72
+                                    $txt .= '¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦'; //48-67
+                                    $txt .= $params->sexo->value.'¦'; //68
+                                    $txt .= '¦'; //69
+                                    $txt .= '03¦';//70
+                                    $txt .= 'AR¦'; //71
+                                    $txt .= '¦'; //72
                                     $txt .= 'F¦'; //73
-                                    $txt .= '¦'; //74
-                                    Storage::append($file['dir']. $file['name'], $txt);
+                                    $txt .= $params->tncuit->value.'¦'; //74
+                                    Storage::append($file['dir']. $file['name'], Helper::utf8toansi($txt));
                                     // save log
                                     $data_log =  Models\CampaignLog::where('id', $log->id)->first() ?? false;
                                     if($data_log){
@@ -121,10 +129,49 @@ class HomeController extends Controller
             }
             // si se generó log
             if($log_count>0){
-                $txt = 'HH¦'.$store->code.'¦'.date('dmy').'¦'.$log_count.'¦1';
-                Storage::prepend($file['dir']. $file['name'], $txt);
+                $txt = 'HH¦'.$dealer->code.'¦'.date('dmY').'¦'.$log_count.'¦1';
+                Storage::prepend($file['dir']. $file['name'], Helper::utf8toansi($txt));
             }
         }
+
+        //Storage::disk('local')->put('file44.txt',  $fp);
+
+
+       //dd($txt);
+
+        //dd($data->count());
+
+
+
+        //$logs = Log::all();
+
+
+        /*
+
+        $string_encoded = iconv( mb_detect_encoding( $txt ), 'Windows-1252', $txt );
+        //dd(mb_detect_encoding( $txt ));
+        /*
+        foreach ($logs as $log) {
+            $txt .= $logs->id;
+            $txt .= "\n";
+        }*/
+        /*
+
+        //offer the content of txt as a download (logs.txt)
+        return response($string_encoded)
+            ->withHeaders([
+            'Content-Type' => 'application/txt',
+            'Cache-Control' => 'no-store, no-cache',
+            'Content-Transfer-Encoding' => 'binary',
+            'Content-Description' => 'File Transfer',
+            'Content-Disposition' => 'attachment; filename="logs.txt',
+        ]);
+        */
+
+        //header('Content-disposition: attachment; filename='.$_GET['filename']);
+        //header('Content-type: application/txt');
+
+        //dd(33);
     }
 
     public function pruebas(){

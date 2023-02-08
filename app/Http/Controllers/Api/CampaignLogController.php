@@ -7,6 +7,7 @@ use App\Models\Image;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use App\Models;
+use Helper;
 
 class CampaignLogController extends ApiController
 {
@@ -206,6 +207,16 @@ class CampaignLogController extends ApiController
         catch(\Exception $e){
             return $this->errorResponse('Error en la subida de imágenes.', 404);
             //return $this->errorResponse($e, 404);
+        }
+    }
+
+    public function validateImei($imei = null, Request $request){
+        try{
+            return $this->successResponse(Helper::mpPaymentApproved($request->imei),'Validación imei', 302);
+        }
+        catch(\Exception $e){
+           return $this->errorResponse('Error de sistema. Algunos de los parámateros enviados no existen o no poseen el formato correcto.', 404);
+           //return $this->errorResponse($e->getMessage(), 404);
         }
     }
 }
