@@ -129,7 +129,7 @@ class HomeController extends Controller
             }
             // si se generó log
             if($log_count>0){
-                $txt = 'HH¦'.$dealer->code.'¦'.date('dmY').'¦'.$log_count.'¦1';
+                $txt = 'HH¦'.$dealer->code.'¦'.date('ymd').'¦'.$log_count.'¦1';
                 Storage::prepend($file['dir']. $file['name'], Helper::utf8toansi($txt));
             }
         }

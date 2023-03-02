@@ -22,7 +22,7 @@ class Helper
                     'Authorization' => 'Bearer '.config('services.mercadopago.token')
                 ],
                 'query' => [
-                        'preference_id' => $preference_id 
+                        'preference_id' => $preference_id
                 ]
             ]);
             //obtengo y guardo log
@@ -38,7 +38,6 @@ class Helper
                             foreach ($element->payments as $payment){
                                 if($payment->status == 'approved'){
                                     $status = true;
-                                }else{
                                     break;
                                 }
                             }
