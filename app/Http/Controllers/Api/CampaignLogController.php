@@ -212,24 +212,35 @@ class CampaignLogController extends ApiController
 
     public function validateImei($imei = null, Request $request){
         try{
+            $resp = false;
             //primero busco un imei con un pago iniciado
             $data = Models\CampaignLog::whereJsonContains('params', ['imei' => ['value' => $request->imei]])
-            ->where('event','payment_init');
+            ->where('event','payment_init')
+            ->withCount('payment_approved')
+            ->has('payment_approved','>',0);
 
-            //reviso todos los pagos iniciados con el imei y veo si alguno fue aprobado
-            $resp = false;
             if($data->count()>0){
-                foreach ($data->get() as $log){
-                    $body = json_decode($log->body);
-                    if(strlen($body->ref)>0){
-                        if(Helper::mpPaymentApproved($body->ref)){
-                            $resp = true;
-                            break;
+                $resp = true;
+            }else{
+                $data = Models\CampaignLog::whereJsonContains('params', ['imei' => ['value' => $request->imei]])
+                ->where('event','payment_init');
+                //reviso todos los pagos iniciados con el imei y veo si alguno fue aprobado
+                if($data->count()>0){
+                    foreach ($data->get() as $log){
+                        if($log->payment_approved_count==0){
+                            $body = json_decode($log->body);
+                            if(strlen($body->ref)>0){
+                                if(Helper::mpPaymentApproved($body->ref)){
+                                    $resp = true;
+                                    break;
+                                }
+                            }
                         }
                     }
                 }
             }
-            return $this->successResponse($resp, 'Validación imei procesado con pago aprobado', 302);
+
+            return $this->successResponse($resp, 'Validación imei procesado con pago aprobado.', 302);
         }
         catch(\Exception $e){
            return $this->errorResponse('Error de sistema. Algunos de los parámateros enviados no existen o no poseen el formato correcto.', 404);

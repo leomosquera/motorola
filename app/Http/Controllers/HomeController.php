@@ -15,6 +15,13 @@ class HomeController extends Controller
 {
 
     public function stores(){
+        $logs =  Models\CampaignLog::where('payment_code', 'MP')
+        ->where('id_log','mc-1675862323-096439')
+        ->where('event','payment_init')
+        ->withCount('payment_approved')
+        ->has('payment_approved','>',1);
+        dd($logs->count());
+
         $info = [];
         $dealers = Models\Dealer::where('status',1)->orderBy('name','ASC');
         foreach ($dealers->get() as $dealer){
@@ -76,7 +83,7 @@ class HomeController extends Controller
                                     $txt .= $price->price_insured.'¦'; //7
                                     $txt .= '¦¦'; //8-9
                                     $txt .= $log->store->code.'¦'; //10
-                                    $txt .= substr($log->id_log, 0, 20).'¦'; //11
+                                    $txt .= substr($services->payment->payment_id, 0, 20).'¦'; //11
                                     $txt .= str_replace(['/','-'], ['',''], $params->fventa->value).'¦'; //12
                                     $txt .= '¦'; //13
                                     $txt .= $params->tndoc->value.'¦'; //14
