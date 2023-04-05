@@ -139,48 +139,21 @@ class CampaignLogController extends ApiController
 
     public function payment(Request $request){
         try{
-            //log by id_log
-            $exist = Models\CampaignLog::where('id_log', $request->id_log)->where(function($query) {
-                $query->where('event',['payment_approved', 'payment_rejected']);
-            })->latest()->first() ?? false;
-
-            if(!$exist){
-                $data  = Models\CampaignLog::
-                where('id_log', $request->id_log)
-                ->where('event', 'payment_init')
-                ->latest()
-                ->first() ?? false;
-                if($data){
-                    //guardo respuesta de la pasarela de pago
-                    $services = json_decode($data->services,true);
-                    $services['payment'] = $request->services;
-                    //guardo log
-                    $campaignlog =                    new Models\CampaignLog();
-                    $campaignlog->usuario_id          = auth('api')->user()->id;
-                    $campaignlog->campaign_id         = $data->campaign_id;
-                    $campaignlog->store_id            = $data->store_id;
-                    $campaignlog->campaign_info       = $data->campaign_info;
-                    $campaignlog->id_log              = $data->id_log;
-                    $campaignlog->payment_code        = $data->payment_code;
-                    $campaignlog->payment_verified    = 1;
-                    $campaignlog->url_referer_encrypt = $data->url_referer_encrypt;
-                    $campaignlog->url_referer_decrypt = $data->url_referer_decrypt;
-                    $campaignlog->body                = null;
-                    $campaignlog->services            = json_encode($services);
-                    $campaignlog->params              = $data->params;
-                    $campaignlog->event               = 'payment_'.$request->status;
-                    $campaignlog->ip_info             = $data->ip_info;
-                    $campaignlog->save();
-                    //indico que el pago fue verificado desde el estado payment_init
-                    $data->payment_verified = 1;
-                    $data->save();
-                    //
-                    return $this->successResponse($request->status,'Log guardado.', 201);
+            $data  = Models\CampaignLog::
+            where('id_log', $request->id_log)
+            ->where('event', 'payment_init')
+            ->withCount('file_register')
+            ->latest()
+            ->first() ?? false;
+            if($data && $data->file_register_count == 0){
+                $savelog = Helper::mpPaymentUpdateAllStatus($data->id, $request->params['preference_id']);
+                if($savelog !== false){
+                    return $this->successResponse($savelog,'Log guardado.', 201);
                 }else{
-                    return $this->errorResponse('El log no fue encontrado o no pertenece a este usuario.', 404);
+                    return $this->errorResponse('El pago para esta operación ya fue procesado o se produjo un error al procesarlo.', 404);
                 }
             }else{
-                return $this->errorResponse('El pago para esta operación ya fue procesado.', 404);
+                return $this->errorResponse('El pago para esta operación ya fue procesado o se produjo un error al procesarlo.', 404);
             }
         }
         catch(\Exception $e){

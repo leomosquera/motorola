@@ -35,8 +35,12 @@ class CampaignLog extends Model
         return $this->hasMany(Models\CampaignLog::class, 'id_log', 'id_log')->where('event','payment_approved'); // Uno a muchos
     }
 
+    public function payment_rejected(){
+        return $this->hasMany(Models\CampaignLog::class, 'id_log', 'id_log')->where('event','payment_rejected'); // Uno a muchos
+    }
+
     public function file_register(){
-        return $this->hasMany(Models\CampaignLog::class, 'id_log', 'id_log')->where('file','!=',null); // Uno a muchos
+        return $this->hasMany(Models\CampaignLog::class, 'id_log', 'id_log')->where('event','payment_approved')->where('file','!=',null); // Uno a muchos
     }
 
 }

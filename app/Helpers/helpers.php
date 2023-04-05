@@ -13,6 +13,68 @@ use Storage;
 class Helper
 {
     // Mercado Pago Buscar si el pago está aprobado según preference_id
+    public static function mpPaymentGetInfo($params = null){
+        $required = array('collection_id', 'collection_status', 'payment_id', 'status', 'merchant_order_id', 'preference_id', 'site_id');
+        if (count(array_intersect_key(array_flip($required), (array) $params)) === count($required)) {
+            // All required keys exist!
+            return [
+                'collection_id'       => $params->collection_id,
+                'collection_status'   => $params->collection_status,
+                'payment_id'          => $params->payment_id,
+                'status'              => $params->status,
+                'merchant_order_id'   => $params->merchant_order_id,
+                'preference_id'       => $params->preference_id,
+                'site_id'             => $params->site_id
+            ];
+        }else{
+            return null;
+        }
+    }
+
+    // Mercado Pago guarda el estado del pago en el log
+    public static function logPaymentSaveStatus($id=null, $params=null){
+        $resp = false;
+        if($id!=null && $params!=null){
+            $data  = Models\CampaignLog::
+            where('id', $id)
+            ->where('event', 'payment_init')
+            ->latest()
+            ->first() ?? false;
+
+            if($data){
+                //guardo respuesta de la pasarela de pago
+                $services = json_decode($data->services,true);
+                $services['payment'] = Helper::mpPaymentGetInfo($params);
+                //guardo log
+                $campaignlog =                    new Models\CampaignLog();
+                $campaignlog->usuario_id          = 1;
+                $campaignlog->campaign_id         = $data->campaign_id;
+                $campaignlog->store_id            = $data->store_id;
+                $campaignlog->campaign_info       = $data->campaign_info;
+                $campaignlog->id_log              = $data->id_log;
+                $campaignlog->payment_code        = $data->payment_code;
+                $campaignlog->payment_verified    = 1;
+                $campaignlog->url_referer_encrypt = $data->url_referer_encrypt;
+                $campaignlog->url_referer_decrypt = $data->url_referer_decrypt;
+                $campaignlog->body                = null;
+                $campaignlog->services            = json_encode($services);
+                $campaignlog->params              = $data->params;
+                $campaignlog->event               = 'payment_'.$params->status;
+                $campaignlog->ip_info             = $data->ip_info;
+                $campaignlog->save();
+                //indico que el pago fue verificado desde el estado payment_init
+                $data->payment_verified = 1;
+                $data->save();
+                //
+                $resp = $params->status;
+            }else{
+                $resp = false;
+            }
+        }
+        return $resp;
+    }
+
+    // Mercado Pago Buscar si el pago está aprobado según preference_id
     public static function mpPaymentApproved($preference_id = '*'){
         try {
             $client = new Client();
@@ -52,6 +114,132 @@ class Helper
             }else{
                 return false;
             }
+        } catch (Exception $e) {
+            //return \Response::json(array('status' => ['404',$e->getMessage()]));
+            return false;
+        }
+    }
+
+    // Mercado Pago Buscar según preference_id y traer el ultimo estado
+    public static function mpPaymentLastStatus($preference_id = '*'){
+        try {
+            $client = new Client();
+            $response = $client->request('GET', config('services.mercadopago.api').'merchant_orders/search', [
+                'headers' => [
+                    'Content-Type'  => 'application/json',
+                    'Authorization' => 'Bearer '.config('services.mercadopago.token')
+                ],
+                'query' => [
+                        'preference_id' => $preference_id
+                ]
+            ]);
+            //obtengo y guardo log
+            $response_statuscode = $response->getStatusCode();
+            $response_contents   = json_decode($response->getBody()->getContents());
+            if($response_statuscode == 200 && $response_contents->elements !== null){
+                $status = false;
+                if(count($response_contents->elements)>0){
+                    //busco en todos los elementos
+                    foreach ($response_contents->elements as $element){
+                        if(count($element->payments)>0){
+                            //busco que todos los pagos estén aprobados en el elemento
+                            foreach ($element->payments as $payment){
+                                $status = $payment->status;
+                            }
+                        }else{
+                            return false;
+                        }
+                    }
+                    return $status;
+                }else{
+                    return false;
+                }
+            }else{
+                return false;
+            }
+        } catch (Exception $e) {
+            //return \Response::json(array('status' => ['404',$e->getMessage()]));
+            return false;
+        }
+    }
+
+    //Realizo un update de todos los logs segun store
+    public static function mpPaymentUpdateAllStatusByStore($store_id){
+        $res = false;
+        $data =  Models\CampaignLog::
+        where('store_id', $store_id)
+        ->where('payment_code', 'MP')
+        ->where('event', 'payment_init')
+        ->withCount('file_register')
+        ->where('created_at', '>=', Carbon::now()->subDays(config('global.log.subdays')))
+        ->orderBy('id', 'DESC')
+        ->with('store');
+
+        if($data->count() > 0){
+            foreach ($data->get() as $log){
+                if($log->file_register_count == 0){
+                    $log_body = json_decode($log->body);
+                    $res = Helper::mpPaymentUpdateAllStatus($log->id,$log_body->ref);
+                }
+            }
+        }
+        return $res;
+    }
+
+    // Mercado Pago Buscar según preference_id y traer el ultimo estado
+    public static function mpPaymentUpdateAllStatus($id, $preference_id = '*'){
+        try {
+            $client = new Client();
+            $response = $client->request('GET', config('services.mercadopago.api').'merchant_orders/search', [
+                'headers' => [
+                    'Content-Type'  => 'application/json',
+                    'Authorization' => 'Bearer '.config('services.mercadopago.token')
+                ],
+                'query' => [
+                        'preference_id' => $preference_id
+                ]
+            ]);
+            //obtengo y guardo log
+            $response_statuscode = $response->getStatusCode();
+            $response_contents   = json_decode($response->getBody()->getContents());
+            if($response_statuscode == 200 && $response_contents->elements !== null){
+                if(count($response_contents->elements)>0){
+                    //busco en todos los elementos
+                    foreach ($response_contents->elements as $element){
+                        if(count($element->payments)>0){
+                            //busco que todos los pagos
+                            foreach ($element->payments as $payment){
+
+                                //obtengo id_log
+                                $data_log = Models\CampaignLog::where('id', $id)
+                                ->first() ?? false;
+
+                                if($data_log !== false){
+                                    //busco en base si esta registrado
+                                    $data = Models\CampaignLog::where('id_log', $data_log->id_log)
+                                    ->whereJsonContains('services', ['payment' => ['payment_id' => $payment->id]])
+                                    ->first() ?? false;
+                                    //si no esta registrado lo guardo
+                                    if($data === false){
+                                        $params = (object) array(
+                                            'collection_id'       => $payment->id,
+                                            'collection_status'   => $payment->status,
+                                            'payment_id'          => $payment->id,
+                                            'status'              => $payment->status,
+                                            'merchant_order_id'   => $element->id,
+                                            'preference_id'       => $element->preference_id,
+                                            'site_id'             => $element->site_id
+                                        );
+                                        //guardo en el log
+                                        $savelog = Helper::logPaymentSaveStatus($id, $params);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return true;
         } catch (Exception $e) {
             //return \Response::json(array('status' => ['404',$e->getMessage()]));
             return false;

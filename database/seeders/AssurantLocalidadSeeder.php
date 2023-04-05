@@ -45,13 +45,18 @@ class AssurantLocalidadSeeder extends Seeder
             $json = json_decode($response_contents, true);
 
             foreach ($json['localidad'] as $loc){
-                $data = new Assurant\Localidad();
-                $data->provincia_cod = $prov->cod;
-                $data->cod           = $loc['cod'];
-                $data->nombre        = $loc['nombre'];
-                $data->cp            = $loc['cp'];
-                $data->preftel       = $loc['preftel'];
-                $data->save();
+                $data  = Assurant\Localidad::
+                whereRaw('LOWER(`nombre`) LIKE ? ',[trim(strtolower($loc['nombre'])).'%'])
+                ->where('cp',$loc['cp']);
+                if($data->count() == 0 && intval($loc['cp']) > 0){
+                    $data = new Assurant\Localidad();
+                    $data->provincia_cod = $prov->cod;
+                    $data->cod           = $loc['cod'];
+                    $data->nombre        = $loc['nombre'];
+                    $data->cp            = $loc['cp'];
+                    $data->preftel       = $loc['preftel'];
+                    $data->save();
+                }
             }
         }
     }

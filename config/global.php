@@ -1,5 +1,8 @@
 <?php
 return [
+    'log' => [
+        'subdays' => 3
+    ],
     'date' => [
         'days' => [
             0 => 'Dom',
