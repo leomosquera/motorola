@@ -28,6 +28,7 @@ Route::get( '/pruebas', 'HomeController@pruebas')->name('pruebas');
 //Stores
 Route::get( '/stores',               'HomeController@stores')->name('stores');
 Route::get( '/stores/history/sales', 'HomeController@storesHistorySales')->name('stores-history-sales');
+Route::get( '/stores/qr',            'HomeController@storesQr')->name('stores-qr');
 Route::get( '/products/migration',   'HomeController@productsMigration')->name('products-migration');
 
 /*

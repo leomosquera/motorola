@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Carbon\Carbon;
 use App\Helpers\Helper;
 use App\Models;
@@ -16,15 +17,36 @@ use Storage;
 class HomeController extends Controller
 {
 
+    public function storesQr(){
+        //stores
+        $stores = Models\Store::where('status',1)
+        ->orderBy('dealer_id','ASC')
+        ->orderBy('code','ASC');
+
+        $info_store = [];
+        foreach ($stores->get() as $store){
+            //genero la url de QR
+            $url = 'https://proteccionmobile.com.ar/?'.base64_encode($store->uniqueid);
+            // QR code with text
+            $image = QrCode::format('svg')->size(300)->generate($url);
+            $file_name = 'QR-' . $store->code . '.svg';
+            $file_output = '/public/img/qr-code/' . $file_name;
+            Storage::disk('local')->put($file_output, $image);
+            //guardo en base
+            $store->image = $file_name;
+            $store->save();
+            //gurado en array
+            array_push($info_store,[
+                'name'  => $store->name,
+                'code'  => $store->code,
+                'url'   => $url,
+                'image' => $store->image
+            ]);
+        }
+	    return view('/pages/stores-qr', ['info_store'=>$info_store]);
+    }
+
     public function stores(){
-
-        $logs =  Models\CampaignLog::where('payment_code', 'MP')
-        ->where('id_log','mc-1675862323-096439')
-        ->where('event','payment_init')
-        ->withCount('payment_approved')
-        ->has('payment_approved','>',1);
-        //dd($logs->count());
-
         $info = [];
         $dealers = Models\Dealer::where('status',1)->orderBy('name','ASC');
         foreach ($dealers->get() as $dealer){

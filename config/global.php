@@ -1,7 +1,7 @@
 <?php
 return [
     'log' => [
-        'subdays' => 3
+        'subdays' => 1
     ],
     'date' => [
         'days' => [
