@@ -22,6 +22,8 @@ class CreateStoresTable extends Migration
             $table->string('uniqueid',100);
             $table->string('code',100);
             $table->string('contact',100)->nullable();
+            $table->string('address',200)->nullable();
+            $table->string('location',200)->nullable();
             $table->string('email',100)->nullable();
             $table->string('phone',50)->nullable();
             $table->string('image',100)->nullable();

@@ -11,7 +11,7 @@ class Store extends Model
     use HasFactory;
 
     protected $fillable = [
-        'status', 'dealer_id', 'name', 'uniqueid', 'code', 'contact', 'email', 'phone', 'image'
+        'status', 'dealer_id', 'name', 'uniqueid', 'code', 'contact', 'address', 'location', 'email', 'phone', 'image'
     ];
 
     protected $guarded = [
