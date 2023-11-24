@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Carbon\Carbon;
-use App\Helpers\Helper;
+use App\Helper\Helper;
 use App\Models;
 use Storage;
 

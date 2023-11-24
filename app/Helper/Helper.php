@@ -1,6 +1,6 @@
-<?php // Code within app\Helpers\Helper.php
+<?php // Code within app\Helper\Helper.php
 
-namespace App\Helpers;
+namespace App\Helper;
 
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Config;

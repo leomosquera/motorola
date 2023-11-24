@@ -9,7 +9,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Carbon;
-use App\Helpers\Helper;
+use App\Helper\Helper;
 use App\Models\InspectionCar;
 use App\Models;
 use File;
