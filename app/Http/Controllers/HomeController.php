@@ -67,6 +67,36 @@ class HomeController extends Controller
         return view('/pages/stores', ['info'=>$info]);
     }
 
+    public function storesMigration(){
+        $json = Storage::get('base/migration/motocare_codigo_tiendas.json');
+        $json = json_decode($json, true);
+
+        //Actualizacion Familias y Productos
+        foreach ($json as $grupo){
+            foreach ($grupo as $valor){
+                if (array_key_exists('Código Franquicia', $valor)) {
+                    $dealer = Models\Dealer::where('name', $valor['GRUPO'])->first() ?? false;
+                    $store  = Models\Store::where('code', $valor['Código Franquicia'])->first() ?? false;
+                    if($dealer && !$store){
+                        $data = new Models\Store();
+                        $data->status = 1;
+                        $data->dealer_id = $dealer->id;
+                        $data->name = $valor['DESCRIPCIÓN'];
+                        $data->uniqueid = Str::uuid()->toString();
+                        $data->code = $valor['Código Franquicia'];
+                        $data->contact = null;
+                        $data->address = $valor['Nombre del PDV'] ?? null;
+                        $data->location = $valor['Ubicación dentro del shopping'] ?? null;
+                        $data->email = null;
+                        $data->phone = null;
+                        $data->save();
+                    }
+                }
+            }
+        }
+
+    }
+
     public function productsMigration(){
         $json = Storage::get('base/migration/update.json');
         $json = json_decode($json, true);
