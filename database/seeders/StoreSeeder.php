@@ -25,24 +25,27 @@ class StoreSeeder extends Seeder
 
         $json = Storage::get('base/migration/motocare_codigo_tiendas.json');
         $json = json_decode($json, true);
+        //dd(count($json));
 
-        foreach ($json as $valor){
-            if (array_key_exists('Código Tienda', $valor)) {
-
-                $dealer = Models\Dealer::where('code', $valor['Código Franquicia'])->first() ?? false;
-                if($dealer){
-                    $data = new Models\Store();
-                    $data->status = 1;
-                    $data->dealer_id = $dealer->id;
-                    $data->name = $valor['DESCRIPCIÓN'];
-                    $data->uniqueid = Str::uuid()->toString();
-                    $data->code = $valor['Branch Code'];
-                    $data->contact = null;
-                    $data->email = null;
-                    $data->phone = null;
-                    $data->save();
+        foreach ($json as $key => $valor){
+            foreach ($valor as $store){
+                if (array_key_exists('Código Franquicia', $store)) {
+                    $dealer = Models\Dealer::where('code', $key)->first() ?? false;
+                    if($dealer){
+                        $data = new Models\Store();
+                        $data->status = 1;
+                        $data->dealer_id = $dealer->id;
+                        $data->name = $store['DESCRIPCIÓN'];
+                        $data->uniqueid = Str::uuid()->toString();
+                        $data->code = $store['Código Franquicia'];
+                        $data->address = $store['Nombre del PDV'];
+                        $data->location = $store['Ubicación dentro del shopping'];
+                        $data->contact = null;
+                        $data->email = null;
+                        $data->phone = null;
+                        $data->save();
+                    }
                 }
-
             }
         }
 
