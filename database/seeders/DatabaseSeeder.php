@@ -27,5 +27,6 @@ class DatabaseSeeder extends Seeder
         $this->call(AssurantSexoSeeder::class);
         $this->call(AssurantEstadoCivilSeeder::class);
         $this->call(CoverageSeeder::class);
+        $this->call(CelularSeeder::class);
     }
 }

@@ -29,6 +29,7 @@ class AssurantLocalidadSeeder extends Seeder
                     self::api()['auth']['user'],
                     self::api()['auth']['pass']
                 ],
+                'verify' => false,
                 'body' => json_encode(
                     [
                         'acc'    => 'LLoc',
