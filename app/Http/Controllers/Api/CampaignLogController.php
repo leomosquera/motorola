@@ -17,6 +17,9 @@ class CampaignLogController extends ApiController
             $data = Models\Campaign::where('id', $request->campaign_id)->where('usuario_id', auth('api')->user()->id)->first() ?? false;
             //store / tienda
             $store = Models\Store::where('uniqueid', $request->store)->first() ?? false;
+            //body to array
+            $body = !empty($request->body) ? json_decode($request->body) : [];
+
             if($data && $store){
                 //valido request
                 $request->params = json_encode($request->params);
@@ -40,7 +43,7 @@ class CampaignLogController extends ApiController
                     $campaignlog->store_id            = $store->id;
                     $campaignlog->campaign_info       = $request->campaign_info;
                     $campaignlog->id_log              = $request->id_log;
-                    $campaignlog->payment_code        = strpos($request->event, 'payment') !== false ? 'MP' : null;
+                    $campaignlog->payment_code        = strpos($request->event, 'payment') !== false ? 'MP' : ( !empty($body->medio) ? $body->medio : null);
                     $campaignlog->url_referer_encrypt = $request->url_referer_encrypt;
                     $campaignlog->url_referer_decrypt = $request->url_referer_decrypt;
                     $campaignlog->body                = $request->body;

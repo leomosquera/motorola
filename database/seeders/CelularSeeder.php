@@ -29,7 +29,7 @@ class CelularSeeder extends Seeder
             if (array_key_exists('PRODUCT CODE ELITA', $valor)) {
 
                 $data = Celular::where('elita', $valor['PRODUCT CODE ELITA'])->first() ?? false;
-                if(!$data){
+                //if(!$data){
                     $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyz';
                     $data = new Celular();
                     $data->status = 1;
@@ -42,7 +42,7 @@ class CelularSeeder extends Seeder
                     $data->precio_seguro = floatval($valor['Precio Seguro Actualizado']);
                     $data->version = trim($valor['Product Description']);
                     $data->save();
-                }
+                //}
 
             }
         }

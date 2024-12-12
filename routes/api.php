@@ -22,7 +22,7 @@ Route::group(['prefix' => 'auth'],
         Route::get('version', [Controllers\Api\AppController::class, 'version']);
     }
 );
-Route::group(['middleware' => 'auth:api'],
+Route::group(['middleware' => ['auth:api']],
     function() {
         Route::get('campaign/{id?}/{store}',                [Controllers\Api\CampaignController::class, 'campaign']);
         Route::get('campaign/log/info',                     [Controllers\Api\CampaignLogController::class, 'info']);

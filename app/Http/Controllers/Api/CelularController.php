@@ -45,7 +45,7 @@ class CelularController extends ApiController
     public function coberturas(Request $request)
     {
         try{
-            $data = Celular::select('code', 'cobertura', 'precio_bruto_equipo', 'precio_seguro')
+            $data = Celular::select('code', 'version', 'cobertura', 'precio_bruto_equipo', 'precio_seguro')
             ->where('status', 1)
             ->where('name', $request->modelo)
             ->where('version', $request->version)
