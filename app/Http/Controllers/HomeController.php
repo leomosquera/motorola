@@ -186,7 +186,7 @@ class HomeController extends Controller
                     //selector de log para crear file
                     $data =  Models\CampaignLog::
                     where('store_id', $store->id)
-                    ->where('payment_code', 'MP')
+                    ->where('payment_code', 'CC')
                     ->where('event', 'payment_approved')
                     ->where('file',null)
                     ->where('created_at', '>=', Carbon::now()->subDays(config('global.log.subdays')))
@@ -202,66 +202,119 @@ class HomeController extends Controller
                             //dd($log->id);
                             //busco en los productos el elegido
                             foreach ($services->products->data as $product){
-                                //busco en la informacion de los precios
-                                foreach ($product->prices as $price){
-                                    //el producto que coincide con el guardado en params es el elegido
-                                    if($params->codarticulo->value == $price->idnewsanmotocare){
-                                        $txt = 'FC¦'; //1
-                                        $txt .= '¦'; //2
-                                        $txt .= $product->sku.'¦'; //3
-                                        $txt .= $price->price_gross.'¦';//4
-                                        $txt .= '0¦'; //5
-                                        $txt .= $price->duration.'¦'; //6
-                                        $txt .= $price->price_insured.'¦'; //7
-                                        $txt .= '¦¦'; //8-9
-                                        $txt .= $log->store->code.'¦'; //10
-                                        $txt .= substr($services->payment->payment_id, 0, 20).'¦'; //11
-                                        $txt .= str_replace(['/','-'], ['',''], $params->fventa->value).'¦'; //12
-                                        $txt .= '¦'; //13
-                                        $txt .= $params->tndoc->value.'¦'; //14
-                                        $txt .= substr(preg_replace('/\s+/', ' ', $params->nombres->value.' '.$params->apellidos->value), 0, 50).'¦'; //15
-                                        $txt .= substr(preg_replace('/\s+/', ' ', $params->email->value), 0, 50).'¦'; //16
-                                        /*
-                                        $txt .= substr(preg_replace('/\s+/', ' ', $params->calle->value.' '.$params->callenro->value), 0, 50).'¦'; //17
-                                        $txt .= substr(preg_replace('/\s+/', ' ', $params->piso->value.' '.$params->dto->value), 0, 50).'¦'; //18
-                                        */
-                                        $txt .= substr(preg_replace('/\s+/', ' ', $params->calle->value.' '.$params->callenro->value.' '.$params->piso->value.' '.$params->dto->value), 0, 50).'¦'; //17
-                                        $txt .= $params->sujetoso->value.'¦'; //18
-                                        $txt .= substr(preg_replace('/\s+/', ' ', $params->localidad->value), 0, 50).'¦'; //19
-                                        $txt .= substr(preg_replace('/\s+/', ' ', $params->cp->value), 0, 25).'¦'; //20
-                                        $txt .= substr(preg_replace('/\s+/', ' ', $params->provincia->value), 0, 50).'¦'; //21
-                                        $txt .= $params->pers->value.'¦'; //22
-                                        $txt .= substr(preg_replace('/\s+/', ' ', $params->tel->value), 0, 15).'¦'; //23
-                                        $txt .= 'AR¦'; //24
-                                        $txt .= 'AR¦'; //25
-                                        $txt .= 'ARS¦'; //26
-                                        $txt .= date('dmY', strtotime($log->created_at)).'¦'; //27 definir bien esta fecha
-                                        $txt .= substr($price->idnewsanmotocare, 0, 20).'¦'; //28 ojo porque este valor está al limite ??
-                                        $txt .= '1¦'; //29
-                                        $txt .= 'MOTOROLA¦'; //30
-                                        $txt .= substr(preg_replace('/\s+/', ' ', $product->description), 0, 30).'¦'; //31
-                                        $txt .= substr($params->imei->value, 0, 20).'¦'; //32
-                                        $txt .= '¦¦¦¦¦¦¦¦¦¦¦¦¦¦'; //33-46
-                                        $txt .= substr($price->price_gross, 0, 20).'¦'; //47
-                                        $txt .= '¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦'; //48-67
-                                        $txt .= $params->sexo->value.'¦'; //68
-                                        $txt .= '¦'; //69
-                                        $txt .= '03¦';//70
-                                        $txt .= 'AR¦'; //71
-                                        $txt .= '¦'; //72
-                                        $txt .= 'F¦'; //73
-                                        $txt .= $params->tncuit->value.'¦'; //74
-                                        Storage::append($file['dir']. $file['name'], Helper::utf8toansi($txt));
+                                //el producto que coincide con el guardado en params es el elegido
+                                if($params->codarticulo->value == $product->code){
 
-                                        // save log
-                                        $data_log =  Models\CampaignLog::where('id', $log->id)->first() ?? false;
-                                        if($data_log){
-                                            $data_log->payment_verified = 1;
-                                            $data_log->file = $file['name'];
-                                            $data_log->save();
-                                        }
-                                        break 2;
+                                    /*
+                                    $txt = 'FC¦'; //1
+                                    $txt .= '¦'; //2
+                                    $txt .= $product->sku.'¦'; //3
+                                    $txt .= $price->price_gross.'¦';//4
+                                    $txt .= '0¦'; //5
+                                    $txt .= $price->duration.'¦'; //6
+                                    $txt .= $price->price_insured.'¦'; //7
+                                    $txt .= '¦¦'; //8-9
+                                    $txt .= $log->store->code.'¦'; //10
+                                    $txt .= substr($services->payment->payment_id, 0, 20).'¦'; //11
+                                    $txt .= str_replace(['/','-'], ['',''], $params->fventa->value).'¦'; //12
+                                    $txt .= '¦'; //13
+                                    $txt .= $params->tndoc->value.'¦'; //14
+                                    $txt .= substr(preg_replace('/\s+/', ' ', $params->nombres->value.' '.$params->apellidos->value), 0, 50).'¦'; //15
+                                    $txt .= substr(preg_replace('/\s+/', ' ', $params->email->value), 0, 50).'¦'; //16
+                                    /*
+                                    $txt .= substr(preg_replace('/\s+/', ' ', $params->calle->value.' '.$params->callenro->value), 0, 50).'¦'; //17
+                                    $txt .= substr(preg_replace('/\s+/', ' ', $params->piso->value.' '.$params->dto->value), 0, 50).'¦'; //18
+                                    */
+                                    /*
+                                    $txt .= substr(preg_replace('/\s+/', ' ', $params->calle->value.' '.$params->callenro->value.' '.$params->piso->value.' '.$params->dto->value), 0, 50).'¦'; //17
+                                    $txt .= $params->sujetoso->value.'¦'; //18
+                                    $txt .= substr(preg_replace('/\s+/', ' ', $params->localidad->value), 0, 50).'¦'; //19
+                                    $txt .= substr(preg_replace('/\s+/', ' ', $params->cp->value), 0, 25).'¦'; //20
+                                    $txt .= substr(preg_replace('/\s+/', ' ', $params->provincia->value), 0, 50).'¦'; //21
+                                    $txt .= $params->pers->value.'¦'; //22
+                                    $txt .= substr(preg_replace('/\s+/', ' ', $params->tel->value), 0, 15).'¦'; //23
+                                    $txt .= 'AR¦'; //24
+                                    $txt .= 'AR¦'; //25
+                                    $txt .= 'ARS¦'; //26
+                                    $txt .= date('dmY', strtotime($log->created_at)).'¦'; //27 definir bien esta fecha
+                                    $txt .= substr($price->idnewsanmotocare, 0, 20).'¦'; //28 ojo porque este valor está al limite ??
+                                    $txt .= '1¦'; //29
+                                    $txt .= 'MOTOROLA¦'; //30
+                                    $txt .= substr(preg_replace('/\s+/', ' ', $product->description), 0, 30).'¦'; //31
+                                    $txt .= substr($params->imei->value, 0, 20).'¦'; //32
+                                    $txt .= '¦¦¦¦¦¦¦¦¦¦¦¦¦¦'; //33-46
+                                    $txt .= substr($price->price_gross, 0, 20).'¦'; //47
+                                    $txt .= '¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦'; //48-67
+                                    $txt .= $params->sexo->value.'¦'; //68
+                                    $txt .= '¦'; //69
+                                    $txt .= '03¦';//70
+                                    $txt .= 'AR¦'; //71
+                                    $txt .= '¦'; //72
+                                    $txt .= 'F¦'; //73
+                                    $txt .= $params->tncuit->value.'¦'; //74
+                                    */
+
+                                    $txt = 'FC¦'; //1
+                                    $txt .= '¦'; //2
+                                    $txt .= '¦'; //3
+                                    $txt .= $product->precio_bruto_equipo.'¦';//4
+                                    $txt .= '0¦'; //5
+                                    $txt .= '12¦'; //6
+                                    $txt .= $product->precio_seguro.'¦'; //7
+                                    $txt .= '¦¦'; //8-9
+                                    $txt .= $log->store->code.'¦'; //10
+                                    $txt .= $log->id.'¦'; //11
+                                    $txt .= str_replace(['/','-'], ['',''], $params->fventa->value).'¦'; //12
+                                    $txt .= '¦'; //13
+                                    $txt .= $params->tndoc->value.'¦'; //14
+                                    $txt .= substr(preg_replace('/\s+/', ' ', $params->nombres->value.' '.$params->apellidos->value), 0, 50).'¦'; //15
+                                    $txt .= substr(preg_replace('/\s+/', ' ', $params->email->value), 0, 50).'¦'; //16
+                                    $txt .= substr(preg_replace('/\s+/', ' ', $params->calle->value.' '.$params->callenro->value.' '.$params->piso->value.' '.$params->dto->value), 0, 50).'¦'; //17
+                                    $txt .= $params->sujetoso->value.'¦'; //18
+                                    $txt .= substr(preg_replace('/\s+/', ' ', $params->localidad->value), 0, 50).'¦'; //19
+                                    $txt .= substr(preg_replace('/\s+/', ' ', $params->cp->value), 0, 25).'¦'; //20
+                                    $txt .= substr(preg_replace('/\s+/', ' ', $params->provincia->value), 0, 50).'¦'; //21
+                                    //$txt .= $params->pers->value.'¦'; //22
+                                    $txt .= substr(preg_replace('/\s+/', ' ', $params->tel->value), 0, 15).'¦'; //22
+                                    $txt .= '¦'; //23
+                                    $txt .= 'AR¦'; //24
+                                    $txt .= 'AR¦'; //25
+                                    $txt .= 'ARS¦'; //26
+                                    $txt .= date('dmY', strtotime($log->created_at)).'¦'; //27 definir bien esta fecha
+                                    $txt .= '¦'; //28 ojo porque este valor está al limite ??
+                                    $txt .= '6¦'; //29
+                                    $txt .= 'MOTOROLA¦'; //30
+                                    $txt .= substr(preg_replace('/\s+/', ' ', $product->version), 0, 30).'¦'; //31
+                                    $txt .= substr($params->imei->value, 0, 20).'¦'; //32
+                                    $txt .= '1¦'; //33
+                                    $txt .= '12¦'; //34
+                                    $txt .= $product->precio_seguro.'¦'; //35
+                                    $txt .= 'C¦'; //36
+                                    $txt .= '¦¦'; //37-38
+                                    $txt .= substr(preg_replace('/\s+/', ' ', $params->tnombres->value), 0, 50).'¦'; //39
+                                    $txt .= $params->tcctype->value.'¦'; //40
+                                    $txt .= $params->ntarjeta->value.'¦'; //41
+                                    $txt .= substr($params->ftarjeta->value, 0, 2).'20'.substr($params->ftarjeta->value, 3, 2).'¦'; //42
+                                    $txt .= '¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦'; //43-122
+                                    $txt .= substr($params->sexo->value, 0, 1).'¦'; //123
+                                    $txt .= substr($params->fnac->value, 6, 4).substr($params->fnac->value, 3, 2).substr($params->fnac->value, 0, 2).'¦'; //124
+                                    $txt .= $params->estadocivil->value.'¦'; //125
+                                    $txt .= 'AR¦'; //126
+                                    $txt .= 'AR¦'; //127
+                                    $txt .= $params->tncuit->value.'¦'; //128
+                                    $txt .= $params->imei->value.'¦'; //129
+                                    $txt .= $params->ocupacion->value.'¦'; //130
+
+                                    Storage::append($file['dir']. $file['name'], Helper::utf8toansi($txt));
+
+                                    // save log
+                                    $data_log =  Models\CampaignLog::where('id', $log->id)->first() ?? false;
+                                    if($data_log){
+                                        $data_log->payment_verified = 1;
+                                        $data_log->file = $file['name'];
+                                        $data_log->save();
                                     }
+                                    break;
                                 }
                             }
                         }
