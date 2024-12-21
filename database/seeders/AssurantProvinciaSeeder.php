@@ -41,10 +41,39 @@ class AssurantProvinciaSeeder extends Seeder
         $response_contents   = $response->getBody()->getContents();
         $json = json_decode($response_contents, true);
 
+        //provincias code 2 chars
+        $arr_provincia = [ 
+            'B' => 'BA',
+            'C' => 'CF',
+            'K' => 'CT',
+            'H' => 'CC',
+            'U' => 'CH',
+            'X' => 'CB',
+            'W' => 'CN',
+            'E' => 'ER',
+            'P' => 'FM',
+            'Y' => 'JY',
+            'L' => 'LP',
+            'F' => 'LR',
+            'M' => 'MZ',
+            'N' => 'MN',
+            'Q' => 'NQ',
+            'R' => 'RN',
+            'A' => 'SA',
+            'J' => 'SJ',
+            'D' => 'SL',
+            'Z' => 'SC',
+            'S' => 'SF',
+            'G' => 'SE',
+            'V' => 'TF',
+            'T' => 'TM',
+        ];
+
         foreach ($json['provincia'] as $valor){
             $data = new Provincia();
-            $data->cod    = $valor['cod'];
-            $data->nombre = $valor['nombre'];
+            $data->cod         = $valor['cod'];
+            $data->branch_code = $arr_provincia[$valor['cod']];
+            $data->nombre      = $valor['nombre'];
             $data->save();
         }
     }

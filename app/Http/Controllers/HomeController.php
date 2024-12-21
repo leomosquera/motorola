@@ -182,16 +182,18 @@ class HomeController extends Controller
             foreach ($stores->get() as $store){
 
                 //update log status
-                if(Helper::mpPaymentUpdateAllStatusByStore($store->id)){
+                //if(Helper::mpPaymentUpdateAllStatusByStore($store->id)){ --> if solo para MP
                     //selector de log para crear file
                     $data =  Models\CampaignLog::
                     where('store_id', $store->id)
                     ->where('payment_code', 'CC')
-                    ->where('event', 'payment_approved')
+                    ->where('event', 'medio de pago')
                     ->where('file',null)
                     ->where('created_at', '>=', Carbon::now()->subDays(config('global.log.subdays')))
                     ->orderBy('id', 'DESC')
                     ->with('store');
+
+                    //dd($data->count().' > STORE > '.$store->id);
 
                     if($data->count() > 0){
                         //mpPaymentApproved
@@ -254,6 +256,9 @@ class HomeController extends Controller
                                     $txt .= $params->tncuit->value.'¦'; //74
                                     */
 
+                                    $prov_data    =  Models\Assurant\Provincia::where('cod', $params->provincia->value)->first() ?? false;
+                                    $celular_data =  Models\Celular::where('code', $params->codarticulo->value)->first() ?? false;
+
                                     $txt = 'FC¦'; //1
                                     $txt .= '¦'; //2
                                     $txt .= '¦'; //3
@@ -262,7 +267,7 @@ class HomeController extends Controller
                                     $txt .= '12¦'; //6
                                     $txt .= $product->precio_seguro.'¦'; //7
                                     $txt .= '¦¦'; //8-9
-                                    $txt .= $log->store->code.'¦'; //10
+                                    $txt .= 'MO12E¦'; //10
                                     $txt .= $log->id.'¦'; //11
                                     $txt .= str_replace(['/','-'], ['',''], $params->fventa->value).'¦'; //12
                                     $txt .= '¦'; //13
@@ -273,7 +278,7 @@ class HomeController extends Controller
                                     $txt .= $params->sujetoso->value.'¦'; //18
                                     $txt .= substr(preg_replace('/\s+/', ' ', $params->localidad->value), 0, 50).'¦'; //19
                                     $txt .= substr(preg_replace('/\s+/', ' ', $params->cp->value), 0, 25).'¦'; //20
-                                    $txt .= substr(preg_replace('/\s+/', ' ', $params->provincia->value), 0, 50).'¦'; //21
+                                    $txt .= substr(preg_replace('/\s+/', ' ', $prov_data->branch_code), 0, 50).'¦'; //21
                                     //$txt .= $params->pers->value.'¦'; //22
                                     $txt .= substr(preg_replace('/\s+/', ' ', $params->tel->value), 0, 15).'¦'; //22
                                     $txt .= '¦'; //23
@@ -281,7 +286,7 @@ class HomeController extends Controller
                                     $txt .= 'AR¦'; //25
                                     $txt .= 'ARS¦'; //26
                                     $txt .= date('dmY', strtotime($log->created_at)).'¦'; //27 definir bien esta fecha
-                                    $txt .= '¦'; //28 ojo porque este valor está al limite ??
+                                    $txt .= $celular_data->elita.'¦'; //28 ojo porque este valor está al limite ??
                                     $txt .= '6¦'; //29
                                     $txt .= 'MOTOROLA¦'; //30
                                     $txt .= substr(preg_replace('/\s+/', ' ', $product->version), 0, 30).'¦'; //31
@@ -319,7 +324,7 @@ class HomeController extends Controller
                             }
                         }
                     }
-                }
+                //}--> if solo para MP
 
             }
             // si se generó log

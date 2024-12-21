@@ -12,7 +12,7 @@ class Provincia extends Model
     protected $table = 'assurant_provincias';
 
     protected $fillable = [
-        'cod', 'nombre'
+        'cod', 'brand_code', 'nombre'
     ];
 
     protected $guarded = [
