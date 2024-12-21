@@ -16,6 +16,7 @@ class CreateAssurantProvinciasTable extends Migration
         Schema::create('assurant_provincias', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('cod', 1)->unique();
+            $table->string('branch_code', 2)->unique();
             $table->string('nombre', 50)->unique();
             $table->timestamps();
         });
