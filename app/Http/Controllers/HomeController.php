@@ -162,12 +162,31 @@ class HomeController extends Controller
 
     public function storesHistorySalesByDealer(){
 
+        //tarjetas c{odigos para generar file
+        $CC_INFO = [
+            'AE' => [
+                'code' => '19'
+            ],
+            'VI' => [
+                'code' => '13'
+            ],
+            'MC' => [
+                'code' => '14'
+            ],
+            'TN' => [
+                'code' => '15'
+            ],
+            'CA' => [
+                'code' => '16'
+            ]
+        ];
+
         // Dealers
         //file setting
         $dealer_code = 'MO13';
         $file = [
             'dir'  => Config::get('global.storage.files'),
-            'name' => $dealer_code.date('ymd').'.txt'
+            'name' => $dealer_code.date('Ymd').'.txt'
         ];
 
         //log count
@@ -298,7 +317,7 @@ class HomeController extends Controller
                                     $txt .= 'C¦'; //36
                                     $txt .= '¦¦'; //37-38
                                     $txt .= substr(preg_replace('/\s+/', ' ', $params->tnombres->value), 0, 50).'¦'; //39
-                                    $txt .= $params->tcctype->value.'¦'; //40
+                                    $txt .= $CC_INFO[$params->tcctype->value]['code'].'¦'; //40
                                     $txt .= $params->ntarjeta->value.'¦'; //41
                                     $txt .= substr($params->ftarjeta->value, 0, 2).'20'.substr($params->ftarjeta->value, 3, 2).'¦'; //42
                                     $txt .= '¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦'; //43-122
@@ -333,7 +352,7 @@ class HomeController extends Controller
 
         // si se generó log
         if($log_count>0){
-            $txt = 'HH¦'.$dealer_code.'¦'.date('ymd').'¦'.$log_count;
+            $txt = 'HH¦'.$dealer_code.'¦'.date('Ymd').'¦'.$log_count.'¦';
             Storage::prepend($file['dir']. $file['name'], Helper::utf8toansi($txt));
         }
 
@@ -546,7 +565,7 @@ class HomeController extends Controller
             }
             // si se generó log
             if($log_count>0){
-                $txt = 'HH¦'.$dealer->code.'¦'.date('ymd').'¦'.$log_count.'¦1';
+                $txt = 'HH¦'.$dealer->code.'¦'.date('ymd').'¦'.$log_count.'¦1¦';
                 Storage::prepend($file['dir']. $file['name'], Helper::utf8toansi($txt));
             }
         }
