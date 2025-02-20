@@ -398,6 +398,25 @@ class HomeController extends Controller
 
     public function storesHistorySalesByStore(){
 
+         //tarjetas c{odigos para generar file
+         $CC_INFO = [
+            'AE' => [
+                'code' => '19'
+            ],
+            'VI' => [
+                'code' => '13'
+            ],
+            'MC' => [
+                'code' => '14'
+            ],
+            'TN' => [
+                'code' => '15'
+            ],
+            'CA' => [
+                'code' => '16'
+            ]
+        ];
+
         // Dealers
         $dealers =  Models\Dealer::where('status', 1);
         foreach ($dealers->get() as $dealer){
@@ -533,7 +552,7 @@ class HomeController extends Controller
                                     $txt .= 'C¦'; //36
                                     $txt .= '¦¦'; //37-38
                                     $txt .= substr(preg_replace('/\s+/', ' ', $params->tnombres->value), 0, 50).'¦'; //39
-                                    $txt .= $params->tcctype->value.'¦'; //40
+                                    $txt .= $CC_INFO[$params->tcctype->value]['code'].'¦'; //40
                                     $txt .= $params->ntarjeta->value.'¦'; //41
                                     $txt .= substr($params->ftarjeta->value, 0, 2).'20'.substr($params->ftarjeta->value, 3, 2).'¦'; //42
                                     $txt .= '¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦'; //43-122
