@@ -186,7 +186,7 @@ class HomeController extends Controller
         $dealer_code = 'MO13';
         $file = [
             'dir'  => Config::get('global.storage.files'),
-            'name' => $dealer_code.date('Ymd').'.txt'
+            'name' => $dealer_code.date('ymd').'.txt'
         ];
 
         //log count
