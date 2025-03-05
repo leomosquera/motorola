@@ -45,15 +45,20 @@ class CelularController extends ApiController
     public function coberturas(Request $request)
     {
         try{
-            $data = Celular::select('code', 'version', 'cobertura', 'precio_bruto_equipo', 'precio_seguro')
+            $data = Celular::select('code', 'elita', 'gama', 'name', 'version', 'cobertura', 'precio_bruto_equipo', 'precio_seguro')
             ->where('status', 1)
             ->where('name', $request->modelo)
             ->where('version', $request->version)
             ->groupBy('code')
-            ->orderBy('precio_seguro', 'ASC');
+            ->orderBy('precio_seguro', 'ASC')
+            ->get()
+            ->map(function ($item) {
+                $item->elita = base64_encode($item->elita); // Encripta el campo 'elita'
+                return $item;
+            })->toArray();
             //dd($data->get());
             if($data)
-                return $this->successResponse($data->get(),'Campaña encontrada', 302);
+                return $this->successResponse($data,'Campaña encontrada', 302);
             else
                 return $this->errorResponse('Campaña no encontrada', 404);
         }
