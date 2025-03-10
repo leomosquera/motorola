@@ -23,9 +23,14 @@ class CampaignController extends ApiController
         //store / tienda
         $store = Models\Store::where('uniqueid', $request->store)->first() ?? false;
 
-        if($data && $store)
+        if($data && $store){
+            $response = [
+                'campaign_id' => $data->id,
+                'store'       => base64_encode($store->code),
+            ];
             return $this->successResponse($data,'Campaña encontrada', 302);
-        else
+        }else{
             return $this->errorResponse('Campaña no encontrada', 404);
+        }
     }
 }
