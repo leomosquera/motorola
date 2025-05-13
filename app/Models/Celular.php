@@ -11,7 +11,7 @@ class Celular extends Model
     protected $table = 'celulares';
 
     protected $fillable = [
-        'status', 'code', 'name', 'gama', 'discontinuado', 'cobertura', 'elita', 'precio_bruto_equipo', 'precio_seguro', 'version'
+        'status', 'code', 'sku', 'name', 'gama', 'discontinuado', 'cobertura', 'elita', 'precio_bruto_equipo', 'precio_seguro', 'version'
     ];
 
     protected $guarded = [

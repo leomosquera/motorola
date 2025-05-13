@@ -17,14 +17,17 @@ class CampaignLogController extends ApiController
             $data = Models\Campaign::where('id', $request->campaign_id)->where('usuario_id', auth('api')->user()->id)->first() ?? false;
             //store / tienda
             $store = Models\Store::where('uniqueid', $request->store)->first() ?? false;
+            $store = $store ? $store->id : null;
             //body to array
             $body = !empty($request->body) ? json_decode($request->body) : [];
 
-            if($data && $store){
+            //recordar que ahora guarda sin importar si existe el store if($data && $store)
+            //en el caso que si o si sea con store siempre if($data && $store)
+            if($data){
                 //valido request
                 $request->params = json_encode($request->params);
                 $validator = Validator::make($request->all(), [
-                    'store'               => 'required|max:100',
+                    'store'               => $store === null ? '' : 'required|max:100',
                     'campaign_id'         => 'required|integer',
                     'campaign_info'       => 'required',
                     'id_log'              => 'required|max:100',
@@ -40,7 +43,7 @@ class CampaignLogController extends ApiController
                     $campaignlog =                    new Models\CampaignLog();
                     $campaignlog->usuario_id          = auth('api')->user()->id;
                     $campaignlog->campaign_id         = $request->campaign_id;
-                    $campaignlog->store_id            = $store->id;
+                    $campaignlog->store_id            = $store;
                     $campaignlog->campaign_info       = $request->campaign_info;
                     $campaignlog->id_log              = $request->id_log;
                     $campaignlog->payment_code        = strpos($request->event, 'payment') !== false ? 'MP' : ( !empty($body->medio) ? $body->medio : null);
@@ -61,8 +64,8 @@ class CampaignLogController extends ApiController
             }
         }
         catch(\Exception $e){
-            return $this->errorResponse('Error de sistema. Algunos de los parámateros enviados no existen o no poseen el formato correcto.', 404);
-            //return $this->errorResponse($e, 404);
+            //return $this->errorResponse('Error de sistema. Algunos de los parámateros enviados no existen o no poseen el formato correcto.', 404);
+            return $this->errorResponse($e, 404);
         }
     }
 

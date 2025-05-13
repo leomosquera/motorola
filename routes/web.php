@@ -32,6 +32,10 @@ Route::get( '/stores/qr',            'HomeController@storesQr')->name('stores-qr
 Route::get( '/stores/migration',     'HomeController@storesMigration')->name('stores-migration');
 Route::get( '/products/migration',   'HomeController@productsMigration')->name('products-migration');
 
+//Celulares
+Route::get( '/celulares/confirm', 'HomeController@celularesConfirm')->name('celulares-confirm');
+Route::get( '/celulares/update',  'HomeController@celularesUpdate')->name('celulares-update');
+
 /*
 // Home
 Route::get( '/',                   'HomeController@index')->name('home')->middleware('auth');

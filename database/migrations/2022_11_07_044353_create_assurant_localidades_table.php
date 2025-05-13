@@ -15,6 +15,7 @@ class CreateAssurantLocalidadesTable extends Migration
     {
         Schema::create('assurant_localidades', function (Blueprint $table) {
             $table->bigIncrements('id');
+            $table->boolean('status')->default(0);
             $table->string('provincia_cod',1); // Relación con usuario
             $table->foreign('provincia_cod')->references('cod')->on('assurant_provincias');
             $table->string('cod', 20)->unique();

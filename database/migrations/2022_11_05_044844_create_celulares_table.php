@@ -17,6 +17,7 @@ class CreateCelularesTable extends Migration
             $table->bigIncrements('id');
             $table->boolean('status')->default(0);
             $table->string('code',30);
+            $table->string('sku',30);
             $table->string('name',50);
             $table->string('gama',50);
             $table->boolean('discontinuado')->default(0);

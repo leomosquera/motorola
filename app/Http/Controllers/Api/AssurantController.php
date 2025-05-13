@@ -5,13 +5,16 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\ApiController;
 use Illuminate\Http\Request;
 use App\Models\Assurant;
+use App\Models\Store;
 
 class AssurantController extends ApiController
 {
     public function provincias(Request $request){
         try{
 
-            $data = Assurant\Provincia::orderBy('nombre', 'ASC')
+            $data = Assurant\Provincia::
+            where('status', 1)
+            ->orderBy('nombre', 'ASC')
             ->select('cod', 'nombre')
             ?? false;
             if($data){
@@ -30,6 +33,7 @@ class AssurantController extends ApiController
         try{
 
             $data = Assurant\Localidad::where('provincia_cod', $code)
+            ->where('status', 1)
             ->orderBy('nombre', 'ASC')
             ->select('cod', 'nombre','cp')
             ?? false;
@@ -69,6 +73,24 @@ class AssurantController extends ApiController
             ?? false;
             if($data){
                 return $this->successResponse($data->get(),'Lista de sexo', 302);
+            }else{
+                return $this->errorResponse('Sin sexo', 404);
+            }
+        }
+        catch(\Exception $e){
+            return $this->errorResponse('Error de sistema. Algunos de los parámateros enviados no existen o no poseen el formato correcto.', 404);
+            //return $this->errorResponse($e, 404);
+        }
+    }
+
+    public function stores(Request $request){
+        try{
+            $data = Store::orderBy('name', 'ASC')
+            ->where('status', 1)
+            ->select('name', 'uniqueid', 'code')
+            ?? false;
+            if($data){
+                return $this->successResponse($data->get(),'Lista de kioskos', 302);
             }else{
                 return $this->errorResponse('Sin sexo', 404);
             }

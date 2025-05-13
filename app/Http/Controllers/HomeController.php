@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Hash;
@@ -186,7 +187,7 @@ class HomeController extends Controller
         $dealer_code = 'MO13';
         $file = [
             'dir'  => Config::get('global.storage.files'),
-            'name' => $dealer_code.date('ymd').'.txt'
+            'name' => 'AMA_'.$dealer_code.'_ENROLLMENT_MOTO_NV_'.date('Ymd').'.txt'
         ];
 
         //log count
@@ -759,6 +760,48 @@ class HomeController extends Controller
         return view('/pages/login/login-usuario-error', [
             'pageConfigs' => $pageConfigs
         ]);
+    }
+
+    public function celularesConfirm(){
+       
+        $count = 0;
+        $json = Storage::get('base/migration/celulares.json');
+        $json = json_decode($json, true);
+
+        foreach ($json as $valor){
+            if (array_key_exists('PRODUCT CODE ELITA', $valor)) {
+
+                $data = Models\Celular::
+                where('name', $valor['Product Name (listado de equipos)'])
+                //->where('gama', $valor['GAMAS'])
+                ->where('cobertura', $valor['Cobertura'])
+                ->where('elita', $valor['PRODUCT CODE ELITA'])
+                //->where('version', $valor['Product Description'])
+                ->first() ?? false;
+
+                if($data){
+                    $count++;
+                }
+                /*
+                if(!$data){
+                    $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyz';
+                    $data = new Models\Celular();
+                    $data->status = 1;
+                    $data->code = substr(str_shuffle($permitted_chars), 0, 4).uniqid();
+                    $data->name = trim($valor['Product Name (listado de equipos)']);
+                    $data->gama = trim($valor['GAMAS']); 
+                    $data->cobertura = trim($valor['Cobertura']);
+                    $data->elita = trim($valor['PRODUCT CODE ELITA']);
+                    $data->precio_bruto_equipo = floatval($valor['PRECIO BRUTO EQUIPO']);
+                    $data->precio_seguro = floatval($valor['Precio Seguro Actualizado']);
+                    $data->version = trim($valor['Product Description']);
+                    $data->save();
+                }*/
+
+            }
+        }
+
+        dd('Conteo: '.$count);
     }
 
     public function exit(){

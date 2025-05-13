@@ -22,8 +22,10 @@ class DatabaseSeeder extends Seeder
         $this->call(ProductSeeder::class);
         $this->call(CampaignSeeder::class);
         $this->call(MpStatusSeeder::class);
-        $this->call(AssurantProvinciaSeeder::class);
-        $this->call(AssurantLocalidadSeeder::class);
+        //$this->call(AssurantProvinciaSeeder::class);
+        //$this->call(AssurantLocalidadSeeder::class);
+        $this->call(ProvinciaSeeder::class);
+        $this->call(LocalidadSeeder::class);
         $this->call(AssurantSexoSeeder::class);
         $this->call(AssurantEstadoCivilSeeder::class);
         $this->call(CoverageSeeder::class);
