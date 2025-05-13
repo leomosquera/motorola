@@ -35,10 +35,10 @@ class StoreSeeder extends Seeder
                         $data = new Models\Store();
                         $data->status = 1;
                         $data->dealer_id = $dealer->id;
-                        $data->name = $store['DESCRIPCIÓN'];
+                        $data->name = $store['Nombre del PDV'];
                         $data->uniqueid = Str::uuid()->toString();
                         $data->code = $store['Código Franquicia'];
-                        $data->address = $store['Nombre del PDV'];
+                        $data->address = $store['DESCRIPCIÓN'];
                         $data->location = $store['Ubicación dentro del shopping'];
                         $data->contact = null;
                         $data->email = null;

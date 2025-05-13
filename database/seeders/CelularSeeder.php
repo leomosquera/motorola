@@ -16,6 +16,12 @@ class CelularSeeder extends Seeder
      *
      * @return void
      */
+
+    private function formatearNumero($valor) {    
+        $numero = (float) $valor;
+        return number_format(round($numero, 2), 2, '.', '');
+    }
+
     public function run()
     {
         Schema::disableForeignKeyConstraints(); //Anulo Foreign Key para el truncate
@@ -34,12 +40,13 @@ class CelularSeeder extends Seeder
                     $data = new Celular();
                     $data->status = 1;
                     $data->code = substr(str_shuffle($permitted_chars), 0, 4).uniqid();
+                    $data->sku = trim($valor['SKU']); 
                     $data->name = trim($valor['Product Name (listado de equipos)']);
                     $data->gama = trim($valor['GAMAS']); 
                     $data->cobertura = trim($valor['Cobertura']);
                     $data->elita = trim($valor['PRODUCT CODE ELITA']);
-                    $data->precio_bruto_equipo = floatval($valor['PRECIO BRUTO EQUIPO']);
-                    $data->precio_seguro = floatval($valor['Precio Seguro Actualizado']);
+                    $data->precio_bruto_equipo = $this->formatearNumero($valor['PRECIO BRUTO EQUIPO']);
+                    $data->precio_seguro = $this->formatearNumero($valor['Precio Seguro Actualizado']);
                     $data->version = trim($valor['Product Description']);
                     $data->save();
                 //}

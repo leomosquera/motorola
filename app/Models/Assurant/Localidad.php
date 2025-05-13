@@ -12,7 +12,7 @@ class Localidad extends Model
     protected $table = 'assurant_localidades';
 
     protected $fillable = [
-        'provincia_cod', 'cod', 'nombre', 'cp', 'preftel'
+        'status', 'provincia_cod', 'cod', 'nombre', 'cp', 'preftel'
     ];
 
     protected $guarded = [
