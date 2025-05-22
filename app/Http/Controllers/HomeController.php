@@ -27,7 +27,9 @@ class HomeController extends Controller
         $info_store = [];
         foreach ($stores->get() as $store){
             //genero la url de QR
-            $url = 'https://proteccionmobile.com.ar/?'.base64_encode($store->uniqueid);
+            //$url = 'https://proteccionmobile.com.ar/?'.base64_encode($store->uniqueid); <-- esto genera QR con clave de acceso para cada store
+            $url = 'https://proteccion-motocare.com.ar';
+            
             // QR code with text
             $image = QrCode::format('svg')->size(300)->generate($url);
             $file_name = 'QR-' . $store->code . '.svg';
@@ -209,7 +211,7 @@ class HomeController extends Controller
                     where('store_id', $store->id)
                     ->where('payment_code', 'CC')
                     ->where('event', 'medio de pago')
-                    ->where('file',null)
+                    ->where('file', null) // -> importante
                     ->where('created_at', '>=', Carbon::now()->subDays(config('global.log.subdays')))
                     ->orderBy('id', 'DESC')
                     ->with('store');
