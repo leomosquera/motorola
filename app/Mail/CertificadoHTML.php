@@ -32,6 +32,9 @@ class CertificadoHTML extends Mailable
     {
         return $this->from('no-reply@kopernicus.tech', 'Protección Motocare') // 👈 debe estar verificado en MailerSend
             ->subject('Tu certificado está listo')
-            ->html($this->mensaje);
+            ->view('emails.certificado.html')
+            ->with([
+                'mensaje' => $this->mensaje,
+            ]);
     }
 }
