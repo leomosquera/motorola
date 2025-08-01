@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\CertificadoHTML;
 
 /*
 |--------------------------------------------------------------------------
@@ -12,6 +14,17 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
+
+Route::get('/probar-mail', function () {
+    $mensajeHtml = '<h2 style="color: #db084a">Hola, este es un correo de prueba</h2><p>Enviado desde Laravel 8</p>';
+
+    try {
+        Mail::to('mosquera.leonidas@kopernicus.tech')->send(new CertificadoHTML($mensajeHtml));
+        return 'Correo enviado correctamente.';
+    } catch (\Exception $e) {
+        return 'Error al enviar el correo: ' . $e->getMessage();
+    }
+});
 
 // Login
 /*

@@ -6,6 +6,8 @@ use App\Http\Controllers\ApiController;
 use App\Models\Image;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
+use App\Mail\CertificadoHTML;
+use Illuminate\Support\Facades\Mail;
 use App\Models;
 use Helper;
 
@@ -55,6 +57,12 @@ class CampaignLogController extends ApiController
                     $campaignlog->event               = $request->event;
                     $campaignlog->ip_info             = $request->ip_info;
                     $campaignlog->save();
+
+                    //evento que determina que llego al final e ingreso medio de pago
+                    if($request->event == 'medio de pago'){
+                        //Mail::to('mosquera.leonidas@kopernicus.tech')->send(new CertificadoHTML('<strong>Este es un mensaje en HTML</strong>'));
+                    }
+
                     return $this->successResponse($validator->fails(),'Log guardado.', 201);
                 }else{
                     return $this->errorResponse($validator->errors(), 404);
