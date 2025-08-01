@@ -30,7 +30,8 @@ class CertificadoHTML extends Mailable
      */
     public function build()
     {
-        return $this->subject('Asunto del correo')
-            ->view('emails.certificado.html'); // Vista blade
+        return $this->from('no-reply@kopernicus.tech', 'Protección Motocare') // 👈 debe estar verificado en MailerSend
+            ->subject('Tu certificado está listo')
+            ->html($this->mensaje);
     }
 }

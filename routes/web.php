@@ -16,7 +16,14 @@ use App\Mail\CertificadoHTML;
 */
 
 Route::get('/probar-mail', function () {
-    $mensajeHtml = '<h2 style="color: #db084a">Hola, este es un correo de prueba</h2><p>Enviado desde Laravel 8</p>';
+    $mensajeHtml = '
+        <div style="font-family: sans-serif; color: #333;">
+            <h2 style="color: #db084a;">Certificado de Participación</h2>
+            <p>Hola <strong>Leonidas</strong>,</p>
+            <p>Gracias por completar el curso. Adjuntamos tu certificado.</p>
+            <p>Saludos,<br><em>El equipo</em></p>
+        </div>
+    ';
 
     try {
         Mail::to('mosquera.leonidas@kopernicus.tech')->send(new CertificadoHTML($mensajeHtml));
