@@ -64,36 +64,39 @@ class CampaignLogController extends ApiController
                     if($request->event == 'medio de pago'){
                         // Datos dinámicos
                         $data = [
-                            'nombre'           => 'María',
-                            'detalleCobertura' =>  $request->params->nombres->value,
-                            'costoMensual'     => '$3.858,18 por mes',
+                            'nombre'           => 'Lorenzo Lamas',
+                            'detalleCobertura' => 'Robo y Daños',
+                            'costoMensual'     => '$33.780,00 por mes',
                         ];
-
+                        
                         // 1) Generar PDF desde Blade
-                        $pdf = Pdf::loadView('pdf.certificado', $data)->setPaper('A4', 'portrait');
+                        $pdf = Pdf::loadView('emails.certificado.html', $data)->setPaper('A4', 'portrait');
                         // Si usás URLs externas en imágenes:
                         // $pdf->setOption(['isRemoteEnabled' => true]);
 
                         $pdfContent = $pdf->output();
 
                         // 2) Guardar en storage/app/certificados/
-                        $filename = 'certificado-prueba-'.date('YmdHis').'.pdf';
+                        $filename = 'certificado-'.Str::slug($data['nombre']).'-'.date('YmdHis').'.pdf';
                         $path = 'certificados/'.$filename; // relativo a storage/app
                         Storage::put($path, $pdfContent);
 
                         // 3) Enviar mail con HTML + adjuntar PDF
                         Mail::to('mosquera.leonidas@kopernicus.tech')
                             ->send(new CertificadoHTML(
-                                mensaje: [
-                                    'nombre'           => substr(preg_replace('/\s+/', ' ', $request->params->nombres->value.' '.$request->params->apellidos->value), 0, 50),
-                                    'detalleCobertura' => $data['detalleCobertura'],
-                                    'costoMensual'     => $data['costoMensual'],
-                                ],
-                                // le paso el binario y/o la ruta según cómo lo armes en el Mailable
-                                pdfContent: $pdfContent,
-                                pdfFilename: $filename,
-                                pdfStoragePath: storage_path('app/'.$path)
+                            [
+                                'nombre'           => $data['nombre'],
+                                'detalleCobertura' => $data['detalleCobertura'],
+                                'costoMensual'     => $data['costoMensual'],
+                            ],
+                            $pdfContent,                           // pdfContent
+                            $filename,                             // pdfFilename
+                            storage_path('app/'.$path)             // pdfStoragePath
                         ));
+
+
+                        return response()->json(['ok' => true, 'path' => $path]);
+
                     }
 
                     return $this->successResponse($validator->fails(),'Log guardado.', 201);
