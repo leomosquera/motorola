@@ -62,40 +62,47 @@ class CampaignLogController extends ApiController
 
                     //evento que determina que llego al final e ingreso medio de pago
                     if($request->event == 'medio de pago'){
-                        // Datos dinámicos
-                        $data = [
-                            'nombre'           => 'Lorenzo Lamas',
-                            'detalleCobertura' => 'Robo y Daños',
-                            'costoMensual'     => '$33.780,00 por mes',
-                        ];
-                        
-                        // 1) Generar PDF desde Blade
-                        $pdf = Pdf::loadView('emails.certificado.html', $data)->setPaper('A4', 'portrait');
-                        // Si usás URLs externas en imágenes:
-                        // $pdf->setOption(['isRemoteEnabled' => true]);
+						//busco datos del producto
+						$services = json_decode($request->services);
+						foreach ($services->products->data as $product){
+							//el producto que coincide con el guardado en params es el elegido
+							if($request->params['codarticulo']['value'] == $product->code){
+								// Datos dinámicos
+								$data = [
+									'nombre'           => substr(preg_replace('/\s+/', ' ', $request->params['nombres']['value']), 0, 50),
+									'detalleCobertura' => $product->cobertura,
+									'costoMensual'     => number_format($product->precio_seguro, 2, ',', '.').' por mes',
+								];
+								
+								// 1) Generar PDF desde Blade
+								$pdf = Pdf::loadView('emails.certificado.html', $data)->setPaper('A4', 'portrait');
+								// Si usás URLs externas en imágenes:
+								// $pdf->setOption(['isRemoteEnabled' => true]);
 
-                        $pdfContent = $pdf->output();
+								$pdfContent = $pdf->output();
 
-                        // 2) Guardar en storage/app/certificados/
-                        $filename = 'certificado-'.Str::slug($data['nombre']).'-'.date('YmdHis').'.pdf';
-                        $path = 'certificados/'.$filename; // relativo a storage/app
-                        Storage::put($path, $pdfContent);
+								// 2) Guardar en storage/app/certificados/
+								$filename = 'certificado-moto-care-'.date('YmdHis').'.pdf';
+								$path = 'certificados/'.$filename; // relativo a storage/app
+								Storage::put($path, $pdfContent);
 
-                        // 3) Enviar mail con HTML + adjuntar PDF
-                        Mail::to('mosquera.leonidas@kopernicus.tech')
-                            ->send(new CertificadoHTML(
-                            [
-                                'nombre'           => $data['nombre'],
-                                'detalleCobertura' => $data['detalleCobertura'],
-                                'costoMensual'     => $data['costoMensual'],
-                            ],
-                            $pdfContent,                           // pdfContent
-                            $filename,                             // pdfFilename
-                            storage_path('app/'.$path)             // pdfStoragePath
-                        ));
+								// 3) Enviar mail con HTML + adjuntar PDF
+								Mail::to('mosquera.leonidas@kopernicus.tech')
+									->send(new CertificadoHTML(
+									[
+										'nombre'           => $data['nombre'],
+										'detalleCobertura' => $data['detalleCobertura'],
+										'costoMensual'     => $data['costoMensual'],
+									],
+									$pdfContent,                           // pdfContent
+									$filename,                             // pdfFilename
+									storage_path('app/'.$path)             // pdfStoragePath
+								));
 
 
-                        return response()->json(['ok' => true, 'path' => $path]);
+								return response()->json(['ok' => true, 'path' => $path]);
+							}
+						}
 
                     }
 
