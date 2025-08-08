@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\ApiController;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use App\Models\Image;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
@@ -27,7 +30,6 @@ class CampaignLogController extends ApiController
             //en el caso que si o si sea con store siempre if($data && $store)
             if($data){
                 //valido request
-                $request->params = json_encode($request->params);
                 $validator = Validator::make($request->all(), [
                     'store'               => $store === null ? '' : 'required|max:100',
                     'campaign_id'         => 'required|integer',
@@ -53,14 +55,45 @@ class CampaignLogController extends ApiController
                     $campaignlog->url_referer_decrypt = $request->url_referer_decrypt;
                     $campaignlog->body                = $request->body;
                     $campaignlog->services            = $request->services;
-                    $campaignlog->params              = $request->params;
+                    $campaignlog->params              = json_encode($request->params);
                     $campaignlog->event               = $request->event;
                     $campaignlog->ip_info             = $request->ip_info;
                     $campaignlog->save();
 
                     //evento que determina que llego al final e ingreso medio de pago
                     if($request->event == 'medio de pago'){
-                        //Mail::to('mosquera.leonidas@kopernicus.tech')->send(new CertificadoHTML('<strong>Este es un mensaje en HTML</strong>'));
+                        // Datos dinámicos
+                        $data = [
+                            'nombre'           => 'María',
+                            'detalleCobertura' =>  $request->params->nombres->value,
+                            'costoMensual'     => '$3.858,18 por mes',
+                        ];
+
+                        // 1) Generar PDF desde Blade
+                        $pdf = Pdf::loadView('pdf.certificado', $data)->setPaper('A4', 'portrait');
+                        // Si usás URLs externas en imágenes:
+                        // $pdf->setOption(['isRemoteEnabled' => true]);
+
+                        $pdfContent = $pdf->output();
+
+                        // 2) Guardar en storage/app/certificados/
+                        $filename = 'certificado-prueba-'.date('YmdHis').'.pdf';
+                        $path = 'certificados/'.$filename; // relativo a storage/app
+                        Storage::put($path, $pdfContent);
+
+                        // 3) Enviar mail con HTML + adjuntar PDF
+                        Mail::to('mosquera.leonidas@kopernicus.tech')
+                            ->send(new CertificadoHTML(
+                                mensaje: [
+                                    'nombre'           => substr(preg_replace('/\s+/', ' ', $request->params->nombres->value.' '.$request->params->apellidos->value), 0, 50),
+                                    'detalleCobertura' => $data['detalleCobertura'],
+                                    'costoMensual'     => $data['costoMensual'],
+                                ],
+                                // le paso el binario y/o la ruta según cómo lo armes en el Mailable
+                                pdfContent: $pdfContent,
+                                pdfFilename: $filename,
+                                pdfStoragePath: storage_path('app/'.$path)
+                        ));
                     }
 
                     return $this->successResponse($validator->fails(),'Log guardado.', 201);

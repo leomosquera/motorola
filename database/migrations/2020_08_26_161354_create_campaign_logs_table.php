@@ -33,6 +33,7 @@ class CreateCampaignLogsTable extends Migration
             $table->string('event',30)->nullable();
             $table->string('ip_info',100)->nullable();
             $table->string('file',100)->nullable();
+            $table->boolean('send_mail')->default(0);
             $table->timestamps();
         });
     }
