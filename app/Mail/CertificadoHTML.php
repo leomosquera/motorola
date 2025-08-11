@@ -41,7 +41,7 @@ class CertificadoHTML extends Mailable
     public function build()
     {
         $email = $this->from('no-reply@kopernicus.tech', 'Protección Motocare')
-            ->subject('Tu certificado está listo')
+            ->subject('¡Gracias! Hemos recibido tu solicitud de compra')
             ->view('emails.certificado.html')
             ->with($this->mensaje);
 

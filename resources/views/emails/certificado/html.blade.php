@@ -13,11 +13,11 @@
                     <td style="padding:0 30px;">
                         <table width="100%">
                         <tr>
-                            <td align="left" style="vertical-align:middle; height:120px;">
-                            <img src="{{ $rutaImagenLogoAssurant }}" style="max-width:180px; display:block;">
+                            <td align="left" width="50%" style="vertical-align:middle; height:120px;">
+                                <img src="{{ $rutaImagenLogoAssurant }}" style="width:90%; max-width:180px; display:block;">
                             </td>
-                            <td align="right" style="vertical-align:middle; height:120px;">
-                            <img src="{{ $rutaImagenLogoMotocare }}" style="max-width:220px; display:block;">
+                            <td align="right" width="50%" style="vertical-align:middle; height:120px;">
+                                <img src="{{ $rutaImagenLogoMotocare }}" style="width:90%; max-width:220px; display:block;">
                             </td>
                         </tr>
                         </table>
