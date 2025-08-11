@@ -87,7 +87,8 @@ class CampaignLogController extends ApiController
 								Storage::put($path, $pdfContent);
 
 								// 3) Enviar mail con HTML + adjuntar PDF
-								Mail::to('mosquera.leonidas@kopernicus.tech')
+								Mail::to($request->params['email']['value'])
+                                    ->bcc('bienvenidaclientes@assurant.com')
 									->send(new CertificadoHTML(
 									[
 										'nombre'           => $data['nombre'],
