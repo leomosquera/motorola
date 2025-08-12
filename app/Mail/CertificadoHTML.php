@@ -46,19 +46,14 @@ class CertificadoHTML extends Mailable
             ->with($this->mensaje);
 
         // Adjuntar el PDF (elegí UNO de los dos enfoques):
-
-        // A) Adjuntar desde binario en memoria:
-        if ($this->pdfContent) {
+        if ($this->pdfContent) { // ✅ SOLO una vía
             $email->attachData($this->pdfContent, $this->pdfFilename, [
-                'mime' => 'application/pdf'
+                'mime' => 'application/pdf',
             ]);
-        }
-
-        // B) Adjuntar desde archivo en storage:
-        if ($this->pdfStoragePath) {
+        } elseif ($this->pdfStoragePath) {
             $email->attach($this->pdfStoragePath, [
                 'as'   => $this->pdfFilename,
-                'mime' => 'application/pdf'
+                'mime' => 'application/pdf',
             ]);
         }
 
