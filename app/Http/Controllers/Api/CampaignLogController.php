@@ -96,8 +96,7 @@ class CampaignLogController extends ApiController
 										'costoMensual'     => $data['costoMensual'],
 									],
 									$pdfContent,                           // pdfContent
-									$filename,                             // pdfFilename
-									storage_path('app/'.$path)             // pdfStoragePath
+									$filename                             // pdfFilename
 								));
 
 
