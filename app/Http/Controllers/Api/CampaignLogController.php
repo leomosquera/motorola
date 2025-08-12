@@ -82,7 +82,7 @@ class CampaignLogController extends ApiController
 								$pdfContent = $pdf->output();
 
 								// 2) Guardar en storage/app/certificados/
-								$filename = 'certificado-moto-care-'.date('YmdHis').'.pdf';
+								$filename = 'Solicitud-de-compra-'.date('YmdHis').'.pdf';
 								$path = 'certificados/'.$filename; // relativo a storage/app
 								Storage::put($path, $pdfContent);
 
