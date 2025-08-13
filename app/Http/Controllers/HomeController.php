@@ -855,16 +855,17 @@ class HomeController extends Controller
                     Mail::to($data['email'])
                         ->bcc($bcc)
                         ->send(new CertificadoHTML(
-                        [
-                            'nombre'           => $data['nombre'],
-                            'detalleCobertura' => $data['detalleCobertura'],
-                            'costoMensual'     => $data['costoMensual'],
-                        ],
-                        $pdfContent,
-                        $filename.
-                        $subject,
-                        $from,
-                        $from_name
+                            [
+                                'nombre'           => $data['nombre'],
+                                'detalleCobertura' => $data['detalleCobertura'],
+                                'costoMensual'     => $data['costoMensual'],
+                            ],
+                            $pdfContent,       // $pdfContent
+                            $filename,         // $pdfFilename
+                            null,              // $pdfStoragePath (no lo usás)
+                            $subject,          // $mailSubject
+                            $from,             // $fromAddress
+                            $from_name         // $fromName
                     ));
                     break;
 

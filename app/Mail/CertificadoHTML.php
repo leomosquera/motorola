@@ -15,55 +15,46 @@ class CertificadoHTML extends Mailable
     protected ?string $pdfContent;
     protected ?string $pdfFilename;
     protected ?string $pdfStoragePath;
-    public ?string $subject;
-    public ?string $from;
-    public ?string $from_name;
 
-    /**
-     * Create a new message instance.
-     *
-     * @return void
-     */
+    // 👉 NO usar $from / $subject (colisionan con Mailable)
+    protected ?string $fromAddress;
+    protected ?string $fromName;
+    protected ?string $mailSubject;
+
     public function __construct(
         array $mensaje,
         ?string $pdfContent = null,
         ?string $pdfFilename = 'certificado.pdf',
         ?string $pdfStoragePath = null,
-        ?string $subject = null,
-        ?string $from = null,
-        ?string $from_name = null
+        ?string $mailSubject = null,
+        ?string $fromAddress = null,
+        ?string $fromName = null
     ) {
-        $this->mensaje         = $mensaje;
-        $this->pdfContent      = $pdfContent;
-        $this->pdfFilename     = $pdfFilename;
-        $this->pdfStoragePath  = $pdfStoragePath;
-        $this->subject         = $subject;
-        $this->from            = $from;
-        $this->from_name       = $from_name;
+        $this->mensaje        = $mensaje;
+        $this->pdfContent     = $pdfContent;
+        $this->pdfFilename    = $pdfFilename;
+        $this->pdfStoragePath = $pdfStoragePath;
+
+        $this->mailSubject = $mailSubject;
+        $this->fromAddress = $fromAddress;
+        $this->fromName    = $fromName;
     }
 
-    /**
-     * Build the message.
-     *
-     * @return $this
-     */
     public function build()
     {
-        $email = $this->from($this->from, $this->from_name)
-            ->subject($this->subject)
+        $fromAddress = $this->fromAddress ?: config('mail.from.address');
+        $fromName    = $this->fromName    ?: config('mail.from.name');
+        $subject     = $this->mailSubject ?: 'Tu certificado';
+
+        $email = $this->from($fromAddress, $fromName)
+            ->subject($subject)
             ->view('emails.certificado.html')
             ->with($this->mensaje);
 
-        // Adjuntar el PDF (elegí UNO de los dos enfoques):
-        if ($this->pdfContent) { // ✅ SOLO una vía
-            $email->attachData($this->pdfContent, $this->pdfFilename, [
-                'mime' => 'application/pdf',
-            ]);
+        if ($this->pdfContent) {
+            $email->attachData($this->pdfContent, $this->pdfFilename, ['mime' => 'application/pdf']);
         } elseif ($this->pdfStoragePath) {
-            $email->attach($this->pdfStoragePath, [
-                'as'   => $this->pdfFilename,
-                'mime' => 'application/pdf',
-            ]);
+            $email->attach($this->pdfStoragePath, ['as' => $this->pdfFilename, 'mime' => 'application/pdf']);
         }
 
         return $email;
