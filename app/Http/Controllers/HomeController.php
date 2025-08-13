@@ -15,8 +15,19 @@ use App\Helper\Helper;
 use App\Models;
 use Storage;
 
+use Barryvdh\DomPDF\Facade\Pdf;
+use MailerSend\MailerSend;
+use MailerSend\Helpers\Builder\Recipient;
+use MailerSend\Helpers\Builder\Attachment as MsAttachment;
+use MailerSend\Helpers\Builder\EmailParams;
+use App\Mail\CertificadoHTML;
+use Illuminate\Support\Facades\Mail;
+
 class HomeController extends Controller
 {
+    private static function sendmail(){
+        return config('enviroment.sendmail');
+    }
 
     public function storesQr(){
         //stores
@@ -804,6 +815,102 @@ class HomeController extends Controller
         }
 
         dd('Conteo: '.$count);
+    }
+
+    public function mailEnvio(){
+
+        try{
+
+            // Datos dinámicos
+            $data = [
+                'email'            => 'mosquera.leonidas@kopernicus.tech',
+                'nombre'           => 'Mariano',
+                'detalleCobertura' => 'Daño y Robo',
+                'costoMensual'     => '25.580 por mes',
+            ];
+            
+            // 1) Generar PDF desde Blade
+            $pdf = Pdf::loadView('emails.certificado.html', $data)->setPaper('A4', 'portrait');
+            // Si usás URLs externas en imágenes:
+            // $pdf->setOption(['isRemoteEnabled' => true]);
+
+            $pdfContent = $pdf->output();
+
+            // 2) Guardar en storage/app/certificados/
+            $filename = 'Solicitud-de-compra-'.date('YmdHis').'.pdf';
+            $path = 'certificados/'.$filename; // relativo a storage/app
+            Storage::put($path, $pdfContent);
+
+            // 3) Enviar mail con HTML + adjuntar PDF
+            $subject = '¡Gracias! Hemos recibido tu solicitud de compra';
+            $from = '';
+            $from_name = 'Protección Motocare';
+            $bcc  = '';
+
+            switch (self::sendmail()['type']) {
+                case 'local':
+
+                    $from = self::sendmail()['local']['from'];
+                    $bcc  = self::sendmail()['local']['bcc'];
+                    Mail::to($data['email'])
+                        ->bcc($bcc)
+                        ->send(new CertificadoHTML(
+                        [
+                            'nombre'           => $data['nombre'],
+                            'detalleCobertura' => $data['detalleCobertura'],
+                            'costoMensual'     => $data['costoMensual'],
+                        ],
+                        $pdfContent,
+                        $filename.
+                        $subject,
+                        $from,
+                        $from_name
+                    ));
+                    break;
+
+                case 'mailersend':
+
+                    $from = self::sendmail()['mailersend']['proteccion-motocare']['from'];
+                    $bcc  = self::sendmail()['mailersend']['proteccion-motocare']['bcc'];
+                    $ms = new MailerSend([
+                        'api_key' => self::sendmail()['mailersend']['proteccion-motocare']['type'] == 'prod' ? self::sendmail()['mailersend']['proteccion-motocare']['token_prod'] : self::sendmail()['mailersend']['proteccion-motocare']['token_dev']
+                    ]);
+
+                    // Renderizar el HTML del Blade a string (igual que tu mailable)
+                    $html = view('emails.certificado.html', [
+                        'nombre'           => $data['nombre'],
+                        'detalleCobertura' => $data['detalleCobertura'],
+                        'costoMensual'     => $data['costoMensual'],
+                    ])->render();
+
+                    // Destinatarios
+                    $to  = [ new Recipient($data['email'], '') ];
+                    $bcc = [ new Recipient($bcc, '') ];
+
+                    // Adjuntar el PDF (usa el binario que ya generaste)
+                    $attachments = [
+                        new MsAttachment($pdfContent, $filename) // MIME se infiere; opcionalmente podés setearlo
+                    ];
+
+                    $email = (new EmailParams())
+                        ->setFrom($from)
+                        ->setFromName($from_name)
+                        ->setRecipients($to)
+                        ->setBcc($bcc)
+                        ->setSubject($subject)
+                        ->setHtml($html)
+                        ->setAttachments($attachments);
+
+                    $ms->email->send($email);
+                    break;
+            }
+
+            return "Mensaje enviado";
+        }
+        catch(\Exception $e){
+            //return $this->errorResponse('Error de sistema. Algunos de los parámateros enviados no existen o no poseen el formato correcto.', 404);
+            dd($e);
+        }
     }
 
     public function exit(){

@@ -15,24 +15,6 @@ use App\Mail\CertificadoHTML;
 |
 */
 
-Route::get('/probar-mail', function () {
-    $mensajeHtml = '
-        <div style="font-family: sans-serif; color: #333;">
-            <h2 style="color: #db084a;">Certificado de Participación</h2>
-            <p>Hola <strong>Leonidas</strong>,</p>
-            <p>Gracias por completar el curso. Adjuntamos tu certificado.</p>
-            <p>Saludos,<br><em>El equipo</em></p>
-        </div>
-    ';
-
-    try {
-        Mail::to('mosquera.leonidas@kopernicus.tech')->send(new CertificadoHTML($mensajeHtml));
-        return 'Correo enviado correctamente.';
-    } catch (\Exception $e) {
-        return 'Error al enviar el correo: ' . $e->getMessage();
-    }
-});
-
 // Login
 /*
 Route::get( 'login',  'LoginController@index')->name('login');
@@ -55,6 +37,9 @@ Route::get( '/products/migration',   'HomeController@productsMigration')->name('
 //Celulares
 Route::get( '/celulares/confirm', 'HomeController@celularesConfirm')->name('celulares-confirm');
 Route::get( '/celulares/update',  'HomeController@celularesUpdate')->name('celulares-update');
+
+//Main reenvio
+Route::get( '/mail/envio',        'HomeController@mailEnvio')->name('mail-envio');
 
 /*
 // Home
