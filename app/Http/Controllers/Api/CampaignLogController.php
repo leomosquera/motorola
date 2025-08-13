@@ -9,6 +9,10 @@ use Illuminate\Support\Str;
 use App\Models\Image;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
+use MailerSend\MailerSend;
+use MailerSend\Helpers\Builder\Recipient;
+use MailerSend\Helpers\Builder\Attachment as MsAttachment;
+use MailerSend\Helpers\Builder\EmailParams;
 use App\Mail\CertificadoHTML;
 use Illuminate\Support\Facades\Mail;
 use App\Models;
@@ -16,6 +20,10 @@ use Helper;
 
 class CampaignLogController extends ApiController
 {
+    private static function sendmail(){
+        return config('enviroment.sendmail');
+    }
+
     public function store(Request $request){
         try{
             //campaña pertenece al usuario?
@@ -87,18 +95,68 @@ class CampaignLogController extends ApiController
 								Storage::put($path, $pdfContent);
 
 								// 3) Enviar mail con HTML + adjuntar PDF
-								Mail::to($request->params['email']['value'])
-                                    ->bcc('bienvenidaclientes@assurant.com')
-									->send(new CertificadoHTML(
-									[
-										'nombre'           => $data['nombre'],
-										'detalleCobertura' => $data['detalleCobertura'],
-										'costoMensual'     => $data['costoMensual'],
-									],
-									$pdfContent,                           // pdfContent
-									$filename                             // pdfFilename
-								));
+                                $subject = '¡Gracias! Hemos recibido tu solicitud de compra';
+                                $from = '';
+                                $from_name = 'Protección Motocare';
+                                $bcc  = '';
 
+                                switch (self::sendmail()['type']) {
+                                    case 'local':
+
+                                        $from = self::sendmail()['local']['from'];
+                                        $bcc  = self::sendmail()['local']['bcc'];
+                                        Mail::to($request->params['email']['value'])
+                                            ->bcc($bcc)
+                                            ->send(new CertificadoHTML(
+                                            [
+                                                'nombre'           => $data['nombre'],
+                                                'detalleCobertura' => $data['detalleCobertura'],
+                                                'costoMensual'     => $data['costoMensual'],
+                                            ],
+                                            $pdfContent,
+                                            $filename.
+                                            $subject,
+                                            $from,
+                                            $from_name
+                                        ));
+                                        break;
+
+                                    case 'mailersend':
+
+                                        $from = self::sendmail()['mailersend']['proteccion-motocare']['from'];
+                                        $bcc  = self::sendmail()['mailersend']['proteccion-motocare']['bcc'];
+                                        $ms = new MailerSend([
+                                            'api_key' => self::sendmail()['mailersend']['proteccion-motocare']['type'] == 'prod' ? self::sendmail()['mailersend']['proteccion-motocare']['token_prod'] : self::sendmail()['mailersend']['proteccion-motocare']['token_dev']
+                                        ]);
+
+                                        // Renderizar el HTML del Blade a string (igual que tu mailable)
+                                        $html = view('emails.certificado.html', [
+                                            'nombre'           => $data['nombre'],
+                                            'detalleCobertura' => $data['detalleCobertura'],
+                                            'costoMensual'     => $data['costoMensual'],
+                                        ])->render();
+
+                                        // Destinatarios
+                                        $to  = [ new Recipient($request->params['email']['value'], '') ];
+                                        $bcc = [ new Recipient($bcc, '') ];
+
+                                        // Adjuntar el PDF (usa el binario que ya generaste)
+                                        $attachments = [
+                                            new MsAttachment($pdfContent, $filename) // MIME se infiere; opcionalmente podés setearlo
+                                        ];
+
+                                        $email = (new EmailParams())
+                                            ->setFrom($from)
+                                            ->setFromName($from_name)
+                                            ->setRecipients($to)
+                                            ->setBcc($bcc)
+                                            ->setSubject($subject)
+                                            ->setHtml($html)
+                                            ->setAttachments($attachments);
+
+                                        $ms->email->send($email);
+                                        break;
+                                }
 
 								return response()->json(['ok' => true, 'path' => $path]);
 							}

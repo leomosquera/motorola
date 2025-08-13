@@ -15,6 +15,9 @@ class CertificadoHTML extends Mailable
     protected ?string $pdfContent;
     protected ?string $pdfFilename;
     protected ?string $pdfStoragePath;
+    public ?string $subject;
+    public ?string $from;
+    public ?string $from_name;
 
     /**
      * Create a new message instance.
@@ -25,12 +28,18 @@ class CertificadoHTML extends Mailable
         array $mensaje,
         ?string $pdfContent = null,
         ?string $pdfFilename = 'certificado.pdf',
-        ?string $pdfStoragePath = null
+        ?string $pdfStoragePath = null,
+        ?string $subject = null,
+        ?string $from = null,
+        ?string $from_name = null
     ) {
         $this->mensaje         = $mensaje;
         $this->pdfContent      = $pdfContent;
         $this->pdfFilename     = $pdfFilename;
         $this->pdfStoragePath  = $pdfStoragePath;
+        $this->subject         = $subject;
+        $this->from            = $from;
+        $this->from_name       = $from_name;
     }
 
     /**
@@ -40,8 +49,8 @@ class CertificadoHTML extends Mailable
      */
     public function build()
     {
-        $email = $this->from('no-reply@kopernicus.tech', 'Protección Motocare')
-            ->subject('¡Gracias! Hemos recibido tu solicitud de compra')
+        $email = $this->from($this->from, $this->from_name)
+            ->subject($this->subject)
             ->view('emails.certificado.html')
             ->with($this->mensaje);
 
