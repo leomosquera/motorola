@@ -174,6 +174,7 @@ class HomeController extends Controller
         }
     }
 
+    //SISTEMA DE ENVIO: ACTIVO
     public function storesHistorySalesByDealer()
     {
         // tarjetas (lo dejé igual)
@@ -244,7 +245,7 @@ class HomeController extends Controller
                             $txt .= '0¦'; //5
                             $txt .= '12¦'; //6
                             $txt .= $product->precio_seguro.'¦'; //7
-                            $txt .= '¦¦'; //8-9
+                            $txt .= str_repeat('¦', 2); //8-9
                             $txt .= $store->code.'¦'; //10
                             $txt .= $log->id.'¦'; //11
                             $txt .= str_replace(['/','-'], ['',''], $params->fventa->value).'¦'; //12
@@ -272,7 +273,12 @@ class HomeController extends Controller
                             $txt .= '12¦'; //34
                             $txt .= $product->precio_seguro.'¦'; //35
                             $txt .= 'C¦'; //36
-                            $txt .= str_repeat('¦', 86); // 37-122 vacíos
+                            $txt .= str_repeat('¦', 2);  // 37-38
+                            $txt .= substr(preg_replace('/\s+/', ' ', $params->tnombres->value), 0, 50).'¦'; //39
+                            $txt .= $CC_INFO[$params->tcctype->value]['code'].'¦'; //40
+                            $txt .= $params->ntarjeta->value.'¦'; //41
+                            $txt .= substr($params->ftarjeta->value, 0, 2).'20'.substr($params->ftarjeta->value, 3, 2).'¦'; //42
+                            $txt .= str_repeat('¦', 80); //43-122
                             $txt .= substr($params->sexo->value, 0, 1).'¦'; //123
                             $txt .= substr($params->fnac->value, 6, 4).substr($params->fnac->value, 3, 2).substr($params->fnac->value, 0, 2).'¦'; //124
                             $txt .= $params->estadocivil->value.'¦'; //125
@@ -305,6 +311,7 @@ class HomeController extends Controller
         } // for days
     }
 
+    //SISTEMA DE ENVIO: NO ACTIVO
     public function storesHistorySalesByStore(){
 
          //tarjetas c{odigos para generar file
