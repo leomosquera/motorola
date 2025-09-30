@@ -14,6 +14,9 @@ use Carbon\Carbon;
 use App\Helper\Helper;
 use App\Models;
 use Storage;
+use ZipArchive;
+use App\Services\ReporteService; // <-- tu service para crear Excel y PDF
+use App\Services\TerminosService;
 
 use Barryvdh\DomPDF\Facade\Pdf;
 use MailerSend\MailerSend;
@@ -203,6 +206,7 @@ class HomeController extends Controller
             $fullPath = $baseDir.$fileName;
 
             $log_count = 0;
+            $logsProcesados = []; // guardamos los id_log para luego generar el zip
 
             foreach ($dealers as $dealer) {
                 // Stores por dealer
@@ -211,6 +215,20 @@ class HomeController extends Controller
                     ->get();
 
                 foreach ($stores as $store) {
+
+                    /*
+                    //Para probar uno solo
+                    if ($store->id != 11) {
+                        continue;
+                    }
+                        $data = Models\CampaignLog::where('store_id', $store->id)
+                        ->where('id_log', 'mc-1759117236-72338e')
+                        ->where('payment_code', 'CC')
+                        ->where('event', 'medio de pago')
+                        ->orderByDesc('id')
+                        ->with('store');
+                    */
+
                     // Logs del día, sin archivo asignado aún
                     $data = Models\CampaignLog::where('store_id', $store->id)
                         ->where('payment_code', 'CC')
@@ -223,6 +241,8 @@ class HomeController extends Controller
                     if ($data->count() === 0) {
                         continue;
                     }
+
+                    // dd($data->count());
 
                     $log_count += $data->count();
 
@@ -297,6 +317,9 @@ class HomeController extends Controller
                                 $data_log->save();
                             }
 
+                            // ✅ Guardar para generar carpeta en el ZIP
+                            $logsProcesados[] = $log->id_log;
+
                             break; // salir del foreach de products (ya encontramos el que matchea)
                         } // foreach products
                     } // foreach logs
@@ -307,6 +330,35 @@ class HomeController extends Controller
             if ($log_count > 0) {
                 $header = 'HH¦'.$dealer_code.'¦'.$day->format('Ymd').'¦'.$log_count.'¦';
                 Storage::prepend($fullPath, Helper::utf8toansi($header));
+            }
+
+            /**
+             * ✅ Crear ZIP solo si hubo registros
+             */
+            if ($log_count > 0) {
+                $zipName = pathinfo($fileName, PATHINFO_FILENAME).'.zip'; // mismo nombre que el txt
+                $zipPath = storage_path('app/'.$baseDir.$zipName);
+
+                $zip = new ZipArchive();
+                if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+
+                    foreach ($logsProcesados as $logId) {
+
+                        // Creamos una carpeta dentro del zip por cada log
+                        $folderName = 'log_'.$logId.'/';
+                        $zip->addEmptyDir($folderName);
+
+                        // Pedimos al service que nos genere los archivos
+                        $excelPath = app(ReporteService::class)->generateExcel($logId);
+                        $pdfPath   = app(TerminosService::class)->generatePdf($logId);
+
+                        // Agregamos los archivos al zip (pueden estar en storage/app/temp por ejemplo)
+                        $zip->addFile($excelPath, $folderName.basename($excelPath));
+                        $zip->addFile($pdfPath,   $folderName.basename($pdfPath));
+                    }
+
+                    $zip->close();
+                }
             }
         } // for days
     }

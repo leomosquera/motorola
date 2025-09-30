@@ -40,6 +40,7 @@ Route::group(['middleware' => ['auth:api']],
         Route::get('assurant/estadocivil',                  [Controllers\Api\AssurantController::class, 'estadocivil']);
         Route::get('assurant/sexo',                         [Controllers\Api\AssurantController::class, 'sexo']);
         Route::get('assurant/stores',                       [Controllers\Api\AssurantController::class, 'stores']);
+        Route::post('assurant/terms',                       [Controllers\Api\AssurantController::class, 'terms']);
         Route::get('celular/modelos',                       [Controllers\Api\CelularController::class, 'modelos']);
         Route::get('celular/versiones/{modelo}',            [Controllers\Api\CelularController::class, 'versiones']);
         Route::get('celular/coberturas/{modelo}/{version}', [Controllers\Api\CelularController::class, 'coberturas']);
