@@ -6,16 +6,17 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use App\Models\CampaignLog;
-use App\Models\Assurant\Provincia;
 use App\Models\Celular;
+use App\Models\Assurant\Provincia;
 use App\Models\Assurant\EstadoCivil;
 
 class ReporteService
 {
     private function getProduct($params, $services)
     {
-        $product = null;  // en vez de false
+        $product = null;
         if ($params->codarticulo->value != null) {
             foreach ($services->products->data as $item) {
                 if ($params->codarticulo->value == $item->code) {
@@ -81,7 +82,6 @@ class ReporteService
             $product = self::getProduct($params, $services);
 
             // Get Producto
-
             $prov_data    = Provincia::where('cod', $params->provincia->value)->first() ?? false;
             $celular_data = Celular::where('code', $params->codarticulo->value)->first() ?? false;
             $estado_civil = EstadoCivil::where('cod', $params->estadocivil->value)->first() ?? false;
@@ -138,30 +138,35 @@ class ReporteService
             // los nombres de hoja no pueden superar 31 caracteres
             $sheet->setTitle(substr($evento, 0, 31));
 
-            // ✅ Escribimos títulos (encabezados)
+            // ✅ Escribir encabezados (fila 1)
             $rowNumber = 1;
             $colIndex  = 1;
             foreach ($row as $titulo => $valor) {
-                $colLetter = Coordinate::stringFromColumnIndex($colIndex); // 1 => A, 2 => B...
-                // ⚡ campos sensibles -> guardar como texto
+                $colLetter = Coordinate::stringFromColumnIndex($colIndex);
+                $sheet->setCellValue($colLetter.$rowNumber, $titulo);
+                $colIndex++;
+            }
+
+            // ✅ Escribir valores (fila 2)
+            $rowNumber = 2;
+            $colIndex  = 1;
+            foreach ($row as $titulo => $valor) {
+                $colLetter = Coordinate::stringFromColumnIndex($colIndex);
+
                 if (in_array($titulo, ['Telefono', 'Imei', 'Documento', 'Cuit'])) {
                     $sheet->setCellValueExplicit(
                         $colLetter.$rowNumber,
                         (string) $valor,
                         DataType::TYPE_STRING
                     );
+                    // forzar formato de texto en toda la columna
+                    $sheet->getStyle($colLetter)
+                          ->getNumberFormat()
+                          ->setFormatCode(NumberFormat::FORMAT_TEXT);
                 } else {
                     $sheet->setCellValue($colLetter.$rowNumber, $valor);
                 }
-                $colIndex++;
-            }
 
-            // ✅ Escribimos los valores en la fila 2
-            $rowNumber = 2;
-            $colIndex  = 1;
-            foreach (array_values($row) as $valor) {
-                $colLetter = Coordinate::stringFromColumnIndex($colIndex);
-                $sheet->setCellValue($colLetter.$rowNumber, $valor);
                 $colIndex++;
             }
         }
