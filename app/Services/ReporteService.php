@@ -4,6 +4,7 @@ namespace App\Services;
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use App\Models\CampaignLog;
 use App\Models\Assurant\Provincia;
@@ -140,9 +141,18 @@ class ReporteService
             // ✅ Escribimos títulos (encabezados)
             $rowNumber = 1;
             $colIndex  = 1;
-            foreach (array_keys($row) as $titulo) {
+            foreach ($row as $titulo => $valor) {
                 $colLetter = Coordinate::stringFromColumnIndex($colIndex); // 1 => A, 2 => B...
-                $sheet->setCellValue($colLetter.$rowNumber, $titulo);
+                // ⚡ campos sensibles -> guardar como texto
+                if (in_array($titulo, ['Telefono', 'Imei', 'Documento', 'Cuit'])) {
+                    $sheet->setCellValueExplicit(
+                        $colLetter.$rowNumber,
+                        (string) $valor,
+                        DataType::TYPE_STRING
+                    );
+                } else {
+                    $sheet->setCellValue($colLetter.$rowNumber, $valor);
+                }
                 $colIndex++;
             }
 
@@ -157,7 +167,7 @@ class ReporteService
         }
 
         // Guardamos en storage/app/temp
-        $fileName = 'log_'.$idLog.'.xlsx';
+        $fileName = $log->id.'-log_'.$idLog.'.xlsx';
         $path = storage_path('app/temp/'.$fileName);
         if (!is_dir(dirname($path))) {
             mkdir(dirname($path), 0775, true);
