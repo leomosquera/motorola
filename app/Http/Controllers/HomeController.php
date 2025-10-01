@@ -178,9 +178,20 @@ class HomeController extends Controller
     }
 
     //SISTEMA DE ENVIO: ACTIVO
-    public function storesHistorySalesByDealer()
+    public function storesHistorySalesByDealer(?bool $force = null, ?bool $includeToday = null)
     {
-        // tarjetas (lo dejé igual)
+        // si no lo pasaron, lo leo de la config
+        // Se incluye el día actual o no, generalmente hay que enviar todos los logs anteriores al dia de hoy.
+        if (is_null($includeToday)) {
+            $includeToday = (bool) config('global.log.include_today', false);
+        }
+
+        // si no lo pasaron, lo leo de la config
+        // forzamos a que se regeneren todos los archivos nuevamente .txt y .zip
+        if (!$force) {
+            $force = (bool) config('global.log.force', false);
+        }
+        
         $CC_INFO = [
             'AE' => ['code' => '19'],
             'VI' => ['code' => '13'],
@@ -189,178 +200,164 @@ class HomeController extends Controller
             'CA' => ['code' => '16'],
         ];
 
-        // Dealers (activos)
-        $dealers = Models\Dealer::where('status', 1)->get();
-
-        // Config
         $dealer_code = 'MO13';
         $baseDir     = Config::get('global.storage.files'); // ej: 'exports/'
         $subdays     = max(1, (int) config('global.log.subdays', 1));
 
-        // Iteramos por cada día del rango: hoy (0) ... N-1
         for ($d = 0; $d < $subdays; $d++) {
-            $day      = Carbon::today()->subDays($d);
+            $day = Carbon::today()->subDays($d);
+
+            // ⛔ Si es hoy y no está permitido procesar hoy
+            if ($day->isToday() && !$includeToday) {
+                continue;
+            }
+
             $from     = $day->copy()->startOfDay();
             $to       = $day->copy()->endOfDay();
             $fileName = 'AMA_'.$dealer_code.'_ENROLLMENT_MOTO_NV_'.$day->format('Ymd').'.txt';
             $fullPath = $baseDir.$fileName;
+            $zipName  = pathinfo($fileName, PATHINFO_FILENAME).'.zip';
+            $zipPath  = storage_path('app/'.$baseDir.$zipName);
 
             $log_count = 0;
-            $logsProcesados = []; // guardamos los id_log para luego generar el zip
+            $logsProcesados = [];
 
-            foreach ($dealers as $dealer) {
-                // Stores por dealer
-                $stores = Models\Store::where('status', 1)
-                    ->where('dealer_id', $dealer->id)
-                    ->get();
+            // 🗑️ Si es hoy o se forzó regeneración, borrar TXT + ZIP previos
+            if ($day->isToday() || $force) {
+                if (Storage::exists($fullPath)) {
+                    Storage::delete($fullPath);
+                }
+                if (file_exists($zipPath)) {
+                    unlink($zipPath);
+                }
+            }
 
-                foreach ($stores as $store) {
+            // ✅ Una única query global por día
+            if ($day->isToday() || $force) {
+                // Para HOY o si forzamos → procesar todo el día
+                $data = Models\CampaignLog::where('payment_code', 'CC')
+                    ->where('event', 'medio de pago')
+                    ->whereBetween('created_at', [$from, $to])
+                    ->orderBy('id', 'asc')
+                    ->with('store');
+            } else {
+                // Para días pasados normales → solo no procesados
+                $data = Models\CampaignLog::where('payment_code', 'CC')
+                    ->where('event', 'medio de pago')
+                    ->whereNull('file')
+                    ->whereBetween('created_at', [$from, $to])
+                    ->orderBy('id', 'asc')
+                    ->with('store');
+            }
 
-                    /*
-                    //Para probar uno solo
-                    if ($store->id != 11) {
+            $logs = $data->get();
+
+            if ($logs->count() === 0) {
+                continue;
+            }
+
+            $log_count += $logs->count();
+
+            foreach ($logs as $log) {
+                $params   = json_decode($log->params);
+                $services = json_decode($log->services);
+
+                foreach ($services->products->data as $product) {
+                    if ($params->codarticulo->value != $product->code) {
                         continue;
                     }
-                        $data = Models\CampaignLog::where('store_id', $store->id)
-                        ->where('id_log', 'mc-1759117236-72338e')
-                        ->where('payment_code', 'CC')
-                        ->where('event', 'medio de pago')
-                        ->orderByDesc('id')
-                        ->with('store');
-                    */
 
-                    // Logs del día, sin archivo asignado aún
-                    $data = Models\CampaignLog::where('store_id', $store->id)
-                        ->where('payment_code', 'CC')
-                        ->where('event', 'medio de pago')
-                        ->whereNull('file')
-                        ->whereBetween('created_at', [$from, $to]) // <-- clave por día
-                        ->orderByDesc('id')
-                        ->with('store');
+                    $prov_data    = Models\Assurant\Provincia::where('cod', $params->provincia->value)->first();
+                    $celular_data = Models\Celular::where('code', $params->codarticulo->value)->first();
 
-                    if ($data->count() === 0) {
-                        continue;
+                    $txt  = 'FC¦';
+                    $txt .= '¦';
+                    $txt .= '¦';
+                    $txt .= $product->precio_bruto_equipo.'¦';
+                    $txt .= '0¦';
+                    $txt .= '12¦';
+                    $txt .= $product->precio_seguro.'¦';
+                    $txt .= str_repeat('¦', 2);
+                    $txt .= $log->store->code.'¦';
+                    $txt .= $log->id.'¦';
+                    $txt .= str_replace(['/','-'], ['',''], $params->fventa->value).'¦';
+                    $txt .= '¦';
+                    $txt .= $params->tndoc->value.'¦';
+                    $txt .= substr(preg_replace('/\s+/', ' ', $params->nombres->value.' '.$params->apellidos->value), 0, 50).'¦';
+                    $txt .= substr(preg_replace('/\s+/', ' ', $params->email->value), 0, 50).'¦';
+                    $txt .= substr(preg_replace('/\s+/', ' ', $params->calle->value.' '.$params->callenro->value.' '.$params->piso->value.' '.$params->dto->value), 0, 50).'¦';
+                    $txt .= $params->sujetoso->value.'¦';
+                    $txt .= substr(preg_replace('/\s+/', ' ', $params->localidad->value), 0, 50).'¦';
+                    $txt .= substr(preg_replace('/\s+/', ' ', $params->cp->value), 0, 25).'¦';
+                    $txt .= substr(preg_replace('/\s+/', ' ', $prov_data->branch_code ?? ''), 0, 50).'¦';
+                    $txt .= substr(preg_replace('/\s+/', ' ', $params->tel->value), 0, 15).'¦';
+                    $txt .= '¦';
+                    $txt .= 'AR¦';
+                    $txt .= 'AR¦';
+                    $txt .= 'ARS¦';
+                    $txt .= $day->format('dmY').'¦';
+                    $txt .= ($celular_data->elita ?? '').'¦';
+                    $txt .= '6¦';
+                    $txt .= 'MOTOROLA¦';
+                    $txt .= substr(preg_replace('/\s+/', ' ', $product->version), 0, 30).'¦';
+                    $txt .= substr($params->imei->value, 0, 20).'¦';
+                    $txt .= '1¦';
+                    $txt .= '12¦';
+                    $txt .= $product->precio_seguro.'¦';
+                    $txt .= 'C¦';
+                    $txt .= str_repeat('¦', 2);
+                    $txt .= substr(preg_replace('/\s+/', ' ', $params->tnombres->value), 0, 50).'¦';
+                    $txt .= $CC_INFO[$params->tcctype->value]['code'].'¦';
+                    $txt .= $params->ntarjeta->value.'¦';
+                    $txt .= substr($params->ftarjeta->value, 0, 2).'20'.substr($params->ftarjeta->value, 3, 2).'¦';
+                    $txt .= str_repeat('¦', 80);
+                    $txt .= substr($params->sexo->value, 0, 1).'¦';
+                    $txt .= substr($params->fnac->value, 6, 4).substr($params->fnac->value, 3, 2).substr($params->fnac->value, 0, 2).'¦';
+                    $txt .= $params->estadocivil->value.'¦';
+                    $txt .= 'AR¦';
+                    $txt .= 'AR¦';
+                    $txt .= $params->tncuit->value.'¦';
+                    $txt .= $params->imei->value.'¦';
+                    $txt .= $params->ocupacion->value.'¦';
+
+                    Storage::append($fullPath, Helper::utf8toansi($txt));
+
+                    $data_log = Models\CampaignLog::find($log->id);
+                    if ($data_log) {
+                        $data_log->payment_verified = 1;
+                        $data_log->file = $fileName;
+                        $data_log->save();
                     }
 
-                    // dd($data->count());
+                    $logsProcesados[] = ['id_log' => $log->id_log, 'id' => $log->id];
 
-                    $log_count += $data->count();
+                    break; // salir del foreach de products
+                }
+            }
 
-                    foreach ($data->get() as $log) {
-                        $params   = json_decode($log->params);
-                        $services = json_decode($log->services);
-
-                        foreach ($services->products->data as $product) {
-                            if ($params->codarticulo->value != $product->code) {
-                                continue;
-                            }
-
-                            $prov_data    = Models\Assurant\Provincia::where('cod', $params->provincia->value)->first();
-                            $celular_data = Models\Celular::where('code', $params->codarticulo->value)->first();
-
-                            $txt  = 'FC¦'; //1
-                            $txt .= '¦'; //2
-                            $txt .= '¦'; //3
-                            $txt .= $product->precio_bruto_equipo.'¦';//4
-                            $txt .= '0¦'; //5
-                            $txt .= '12¦'; //6
-                            $txt .= $product->precio_seguro.'¦'; //7
-                            $txt .= str_repeat('¦', 2); //8-9
-                            $txt .= $store->code.'¦'; //10
-                            $txt .= $log->id.'¦'; //11
-                            $txt .= str_replace(['/','-'], ['',''], $params->fventa->value).'¦'; //12
-                            $txt .= '¦'; //13
-                            $txt .= $params->tndoc->value.'¦'; //14
-                            $txt .= substr(preg_replace('/\s+/', ' ', $params->nombres->value.' '.$params->apellidos->value), 0, 50).'¦'; //15
-                            $txt .= substr(preg_replace('/\s+/', ' ', $params->email->value), 0, 50).'¦'; //16
-                            $txt .= substr(preg_replace('/\s+/', ' ', $params->calle->value.' '.$params->callenro->value.' '.$params->piso->value.' '.$params->dto->value), 0, 50).'¦'; //17
-                            $txt .= $params->sujetoso->value.'¦'; //18
-                            $txt .= substr(preg_replace('/\s+/', ' ', $params->localidad->value), 0, 50).'¦'; //19
-                            $txt .= substr(preg_replace('/\s+/', ' ', $params->cp->value), 0, 25).'¦'; //20
-                            $txt .= substr(preg_replace('/\s+/', ' ', $prov_data->branch_code ?? ''), 0, 50).'¦'; //21
-                            $txt .= substr(preg_replace('/\s+/', ' ', $params->tel->value), 0, 15).'¦'; //22
-                            $txt .= '¦'; //23
-                            $txt .= 'AR¦'; //24
-                            $txt .= 'AR¦'; //25
-                            $txt .= 'ARS¦'; //26
-                            $txt .= $day->format('dmY').'¦'; //27 (fecha del archivo/día) o usá date('dmY', strtotime($log->created_at))
-                            $txt .= ($celular_data->elita ?? '').'¦'; //28
-                            $txt .= '6¦'; //29
-                            $txt .= 'MOTOROLA¦'; //30
-                            $txt .= substr(preg_replace('/\s+/', ' ', $product->version), 0, 30).'¦'; //31
-                            $txt .= substr($params->imei->value, 0, 20).'¦'; //32
-                            $txt .= '1¦'; //33
-                            $txt .= '12¦'; //34
-                            $txt .= $product->precio_seguro.'¦'; //35
-                            $txt .= 'C¦'; //36
-                            $txt .= str_repeat('¦', 2);  // 37-38
-                            $txt .= substr(preg_replace('/\s+/', ' ', $params->tnombres->value), 0, 50).'¦'; //39
-                            $txt .= $CC_INFO[$params->tcctype->value]['code'].'¦'; //40
-                            $txt .= $params->ntarjeta->value.'¦'; //41
-                            $txt .= substr($params->ftarjeta->value, 0, 2).'20'.substr($params->ftarjeta->value, 3, 2).'¦'; //42
-                            $txt .= str_repeat('¦', 80); //43-122
-                            $txt .= substr($params->sexo->value, 0, 1).'¦'; //123
-                            $txt .= substr($params->fnac->value, 6, 4).substr($params->fnac->value, 3, 2).substr($params->fnac->value, 0, 2).'¦'; //124
-                            $txt .= $params->estadocivil->value.'¦'; //125
-                            $txt .= 'AR¦'; //126
-                            $txt .= 'AR¦'; //127
-                            $txt .= $params->tncuit->value.'¦'; //128
-                            $txt .= $params->imei->value.'¦'; //129
-                            $txt .= $params->ocupacion->value.'¦'; //130
-
-                            Storage::append($fullPath, Helper::utf8toansi($txt));
-
-                            // Marcar log como procesado para este archivo (del día)
-                            if ($data_log = Models\CampaignLog::find($log->id)) {
-                                $data_log->payment_verified = 1;
-                                $data_log->file = $fileName;
-                                $data_log->save();
-                            }
-
-                            // ✅ Guardar para generar carpeta en el ZIP
-                            $logsProcesados[] = $log->id_log;
-
-                            break; // salir del foreach de products (ya encontramos el que matchea)
-                        } // foreach products
-                    } // foreach logs
-                } // foreach stores
-            } // foreach dealers
-
-            // Header por archivo (solo si hubo líneas ese día)
             if ($log_count > 0) {
                 $header = 'HH¦'.$dealer_code.'¦'.$day->format('Ymd').'¦'.$log_count.'¦';
                 Storage::prepend($fullPath, Helper::utf8toansi($header));
-            }
-
-            /**
-             * ✅ Crear ZIP solo si hubo registros
-             */
-            if ($log_count > 0) {
-                $zipName = pathinfo($fileName, PATHINFO_FILENAME).'.zip'; // mismo nombre que el txt
-                $zipPath = storage_path('app/'.$baseDir.$zipName);
 
                 $zip = new ZipArchive();
                 if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+                    foreach ($logsProcesados as $logData) {
+                        $idLog = $logData['id_log'];
+                        $id    = $logData['id'];
 
-                    foreach ($logsProcesados as $logId) {
-
-                        // Creamos una carpeta dentro del zip por cada log
-                        $folderName = $log->id.'-log_'.$logId.'/';
+                        $folderName = $id.'-log_'.$idLog.'/';
                         $zip->addEmptyDir($folderName);
 
-                        // Pedimos al service que nos genere los archivos
-                        $excelPath = app(ReporteService::class)->generateExcel($logId);
-                        $pdfPath   = app(TerminosService::class)->generatePdf($logId, $log->id);
+                        $excelPath = app(ReporteService::class)->generateExcel($idLog, $id);
+                        $pdfPath   = app(TerminosService::class)->generatePdf($idLog, $id);
 
-                        // Agregamos los archivos al zip (pueden estar en storage/app/temp por ejemplo)
                         $zip->addFile($excelPath, $folderName.basename($excelPath));
                         $zip->addFile($pdfPath,   $folderName.basename($pdfPath));
                     }
-
                     $zip->close();
                 }
             }
-        } // for days
+        }
     }
 
     //SISTEMA DE ENVIO: NO ACTIVO

@@ -33,7 +33,7 @@ class ReporteService
      * de un evento determinado para el id_log dado.
      * Devuelve la ruta física del archivo generado.
      */
-    public function generateExcel(string $idLog, array $eventos = []): string
+    public function generateExcel(string $idLog, string $id): string
     {
         // Si no te pasan eventos, definí los que quieras consultar
         if (empty($eventos)) {
@@ -172,7 +172,7 @@ class ReporteService
         }
 
         // Guardamos en storage/app/temp
-        $fileName = $log->id.'-log_'.$idLog.'.xlsx';
+        $fileName = $id.'-log_'.$idLog.'.xlsx';
         $path = storage_path('app/temp/'.$fileName);
         if (!is_dir(dirname($path))) {
             mkdir(dirname($path), 0775, true);
