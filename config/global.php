@@ -1,7 +1,10 @@
 <?php
 return [
     'log' => [
-        'subdays' => 30
+        'subdays' => 30,
+        'include_today' => true,
+        'force' => false
+
     ],
     'date' => [
         'days' => [
