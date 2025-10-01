@@ -345,12 +345,12 @@ class HomeController extends Controller
                     foreach ($logsProcesados as $logId) {
 
                         // Creamos una carpeta dentro del zip por cada log
-                        $folderName = 'log_'.$logId.'/';
+                        $folderName = $log->id.'-log_'.$logId.'/';
                         $zip->addEmptyDir($folderName);
 
                         // Pedimos al service que nos genere los archivos
                         $excelPath = app(ReporteService::class)->generateExcel($logId);
-                        $pdfPath   = app(TerminosService::class)->generatePdf($logId);
+                        $pdfPath   = app(TerminosService::class)->generatePdf($logId, $log->id);
 
                         // Agregamos los archivos al zip (pueden estar en storage/app/temp por ejemplo)
                         $zip->addFile($excelPath, $folderName.basename($excelPath));

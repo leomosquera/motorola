@@ -63,7 +63,7 @@ class TerminosService
      * Genera un PDF del view de términos para el id_log dado.
      * Devuelve la ruta física del archivo creado.
      */
-    public function generatePdf(string $idLog): string
+    public function generatePdf(string $idLog, string $id): string
     {
         // Reutilizamos la misma lógica
         $terminos = $this->buildTerminosData($idLog);
@@ -82,7 +82,7 @@ class TerminosService
         ])->setPaper('A4','portrait'); // podés ajustar tamaño u orientación
 
         // Guardar en storage/app/temp (por ejemplo)
-        $fileName = 'terminos_'.$idLog.'.pdf';
+        $fileName = $id.'-terminos_'.$idLog.'.pdf';
         $path = storage_path('app/temp/'.$fileName);
 
         // Crear carpeta si no existe
