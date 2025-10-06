@@ -109,6 +109,7 @@ class ReporteService
                 'Telefono'            => ($params && isset($params->tel->value)) ? $params->tel->value : '',
                 'Email'               => ($params && isset($params->email->value)) ? substr(preg_replace('/\s+/', ' ', $params->email->value), 0, 60) : '',
                 'Imei'                => ($params && isset($params->imei->value)) ? substr(preg_replace('/\s+/', ' ', $params->imei->value), 0, 20) : '',
+                'Fecha_Fact'          => ($params && isset($params->fventa->value)) ?str_replace(['/','-'], ['',''], $params->fventa->value) : '',
                 'Dir_Calle'           => ($params && isset($params->calle->value)) ? substr(preg_replace('/\s+/', ' ', $params->calle->value), 0, 50) : '',
                 'Dir_Calle_Nro'       => ($params && isset($params->callenro->value)) ? substr(preg_replace('/\s+/', ' ', $params->callenro->value), 0, 50) : '',
                 'Dir_Piso'            => ($params && isset($params->piso->value)) ? substr(preg_replace('/\s+/', ' ', $params->piso->value), 0, 50) : '',
@@ -127,7 +128,7 @@ class ReporteService
                 'CC_Type'             => ($params && isset($params->tcctype->value)) ? $CC_INFO[$params->tcctype->value]['code'] : '',
                 'CC_Fecha_Venc'       => ($params && isset($params->ftarjeta->value)) ? substr($params->ftarjeta->value, 0, 2).'20'.substr($params->ftarjeta->value, 3, 2) : '',
                 'Email_Enviado'       => ($log->send_mail == 1) ? 'SI' : 'NO',
-                'Fecha_Venta'         => ($params && isset($params->fventa->value)) ?str_replace(['/','-'], ['',''], $params->fventa->value) : '',
+                'Fecha_Venta'         => $log->created_at->format('d/m/Y'),
                 'File'                => $log->file ?? '',
                 'IP'                  => $log->ip_info ?? '',
                 // …agregá los campos que necesites

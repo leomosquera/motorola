@@ -114,11 +114,15 @@ class CampaignLogController extends ApiController
                                                 'costoMensual'     => $data['costoMensual'],
                                             ],
                                             $pdfContent,
-                                            $filename.
+                                            $filename,
                                             $subject,
                                             $from,
                                             $from_name
                                         ));
+
+                                        // ✅ Guardar flag de envío correcto
+                                        $campaignlog->send_mail = 1;
+                                        $campaignlog->save();
                                         break;
 
                                     case 'mailersend':
@@ -155,6 +159,10 @@ class CampaignLogController extends ApiController
                                             ->setAttachments($attachments);
 
                                         $ms->email->send($email);
+
+                                        // ✅ Guardar flag de envío correcto
+                                        $campaignlog->send_mail = 1;
+                                        $campaignlog->save();
                                         break;
                                 }
 

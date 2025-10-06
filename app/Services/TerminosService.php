@@ -35,7 +35,7 @@ class TerminosService
 
         return [
             'version'               => $params->terms_version->value,
-            'fventa'                => substr($params->fventa->value, 0, 2).'/'.substr($params->fventa->value, 3, 2).'/'.substr($params->fventa->value, 6, 4),
+            'fventa'                => $data->created_at->format('d/m/Y'),
             'nombre'                => substr(preg_replace('/\s+/', ' ', $params->apellidos->value.' '.$params->nombres->value), 0, 100),
             'dni'                   => 'DNI '.$params->tndoc->value,
             'cuit'                  => $params->tncuit->value,
