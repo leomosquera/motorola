@@ -307,7 +307,7 @@ class HomeController extends Controller
                     $txt .= 'C¦';
                     $txt .= str_repeat('¦', 2);
                     $txt .= substr(preg_replace('/\s+/', ' ', $params->tnombres->value), 0, 50).'¦';
-                    $txt .= $CC_INFO[$params->tcctype->value]['code'].'¦';
+                    $txt .= $params->tcctype->value.'¦';
                     $txt .= $params->ntarjeta->value.'¦';
                     $txt .= substr($params->ftarjeta->value, 0, 2).'20'.substr($params->ftarjeta->value, 3, 2).'¦';
                     $txt .= str_repeat('¦', 80);
