@@ -10,11 +10,23 @@ class Celular extends Model
     use HasFactory;
     protected $table = 'celulares';
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($celular) {
+            // Solo al crear, no al actualizar
+            $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyz';
+            $celular->code = substr(str_shuffle($permitted_chars), 0, 4) . uniqid();
+            $celular->status = 1;
+        });
+    }
+
     protected $fillable = [
-        'status', 'code', 'sku', 'name', 'gama', 'discontinuado', 'cobertura', 'elita', 'precio_bruto_equipo', 'precio_seguro', 'version'
+        'sku', 'name', 'gama', 'discontinuado', 'cobertura', 'elita', 'precio_bruto_equipo', 'precio_seguro', 'version'
     ];
 
     protected $guarded = [
-        'id', 'created_at', 'updated_at'
+        'id', 'status', 'code', 'created_at', 'updated_at'
     ];
 }
