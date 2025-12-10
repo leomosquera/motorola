@@ -114,69 +114,6 @@ class HomeController extends Controller
 
     }
 
-    public function productsMigration(){
-        $json = Storage::get('base/migration/update.json');
-        $json = json_decode($json, true);
-
-        //Actualizacion Familias y Productos
-        foreach ($json as $valor){
-            if (array_key_exists('Product SKU', $valor)) {
-
-                $data   = Models\Product::where('sku', $valor['Product SKU'])->first() ?? false;
-                $family = Models\ProductFamily::where('name', $valor['Product Name'])->first() ?? false;
-
-                //Actualizacion Familias
-                if(!$family){
-                    $family = new Models\ProductFamily();
-                    $family->name = $valor['Product Name'];
-                    $family->save();
-                }
-
-                //Actualizacion Productos
-                if(!$data){
-                    $data = new Models\Product();
-                }
-
-                $data->product_type_id = 1;
-                $data->product_family_id = $family->id;
-                $data->status = trim($valor['DISCONTINUADOS']) == 'OK' && (float)$valor['PRECIO BRUTO EQUIPO'] > 0 && (float)$valor['PRECIO MINIMO'] > 0 && (float)$valor['PRECIO MAXIMO'] > 0 && (float)$valor['PREMIO ABM INTERNO'] > 0 && (float)$valor['Precio Seguro Actualizado'] > 0 && (float)$valor['DEDUCIBLE'] > 0 ? 1 : 0;
-                $data->sku = $valor['Product SKU'];
-                $data->elita = $valor['PRODUCT CODE ELITA'];
-                $data->name = $valor['Product Name'];
-                $data->description = $valor['Product Description'];
-                $data->save();
-
-                //borro precios anteriores
-                if($data->id && $data->id>0){
-                    Models\ProductPrice::where('product_id', $data->id)->delete();
-                }
-
-            }
-        }
-
-        //Guardo Precios
-        foreach ($json as $valor){
-            if (array_key_exists('Product SKU', $valor)) {
-                $data   = Models\Product::where('sku', $valor['Product SKU'])->first() ?? false;
-                if($data){
-                    $data_price = new Models\ProductPrice();
-                    $data_price->product_id = $data->id;
-                    $data_price->coverage = $valor['Cobertura'];
-                    $data_price->duration = $valor['Duracion'];
-                    $data_price->idnewsanmotocare = strlen($valor['ID Newsan Motocare']) > 0 ? $valor['ID Newsan Motocare'] : Str::uuid()->toString();
-                    $data_price->price_gross = (float)$valor['PRECIO BRUTO EQUIPO'];
-                    $data_price->price_min = (float)$valor['PRECIO MINIMO'];
-                    $data_price->price_max = (float)$valor['PRECIO MAXIMO'];
-                    $data_price->price_abm = (float)$valor['PREMIO ABM INTERNO'];
-                    $data_price->price_insured = (float)$valor['Precio Seguro Actualizado'];
-                    $data_price->price_deductible = (float)$valor['DEDUCIBLE'];
-                    $data_price->save();
-                }
-
-            }
-        }
-    }
-
     //SISTEMA DE ENVIO: ACTIVO
     public function storesHistorySalesByDealer(?bool $force = null, ?bool $includeToday = null)
     {
@@ -724,48 +661,6 @@ class HomeController extends Controller
         return view('/pages/login/login-usuario-error', [
             'pageConfigs' => $pageConfigs
         ]);
-    }
-
-    public function celularesConfirm(){
-       
-        $count = 0;
-        $json = Storage::get('base/migration/celulares.json');
-        $json = json_decode($json, true);
-
-        foreach ($json as $valor){
-            if (array_key_exists('PRODUCT CODE ELITA', $valor)) {
-
-                $data = Models\Celular::
-                where('name', $valor['Product Name (listado de equipos)'])
-                //->where('gama', $valor['GAMAS'])
-                ->where('cobertura', $valor['Cobertura'])
-                ->where('elita', $valor['PRODUCT CODE ELITA'])
-                //->where('version', $valor['Product Description'])
-                ->first() ?? false;
-
-                if($data){
-                    $count++;
-                }
-                /*
-                if(!$data){
-                    $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyz';
-                    $data = new Models\Celular();
-                    $data->status = 1;
-                    $data->code = substr(str_shuffle($permitted_chars), 0, 4).uniqid();
-                    $data->name = trim($valor['Product Name (listado de equipos)']);
-                    $data->gama = trim($valor['GAMAS']); 
-                    $data->cobertura = trim($valor['Cobertura']);
-                    $data->elita = trim($valor['PRODUCT CODE ELITA']);
-                    $data->precio_bruto_equipo = floatval($valor['PRECIO BRUTO EQUIPO']);
-                    $data->precio_seguro = floatval($valor['Precio Seguro Actualizado']);
-                    $data->version = trim($valor['Product Description']);
-                    $data->save();
-                }*/
-
-            }
-        }
-
-        dd('Conteo: '.$count);
     }
 
     public function mailEnvio(){

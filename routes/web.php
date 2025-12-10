@@ -28,11 +28,6 @@ Route::any('{any}', function () {
 //Route::get( '/stores/history/sales', 'HomeController@storesHistorySalesByDealer')->name('stores-history-sales');
 //Route::get( '/stores/qr',            'HomeController@storesQr')->name('stores-qr');
 //Route::get( '/stores/migration',     'HomeController@storesMigration')->name('stores-migration');
-//Route::get( '/products/migration',   'HomeController@productsMigration')->name('products-migration');
-
-//Celulares
-//Route::get( '/celulares/confirm', 'HomeController@celularesConfirm')->name('celulares-confirm');
-//Route::get( '/celulares/update',  'HomeController@celularesUpdate')->name('celulares-update');
 
 //Main reenvio
 //Route::get( '/mail/envio',        'HomeController@mailEnvio')->name('mail-envio');
