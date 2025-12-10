@@ -28,8 +28,6 @@ class CampaignSendFiles extends Command
 
         foreach ($pendientes as $file) {
 
-            $this->info("📤 Enviando archivo: {$file->txt_name}");
-
             try {
                 // 1️⃣ Conectar
                 $connection = ssh2_connect($this->host, $this->port, ['hostkey' => 'ssh-rsa']);
@@ -56,20 +54,18 @@ class CampaignSendFiles extends Command
                 // -----------------------
                 // 4️⃣ Enviar el TXT primero
                 // -----------------------
-                $this->sendFile(
-                    $sftp,
-                    $file->txt_path,      // ← path relativo
-                    "/ToAssurantEFT/{$file->txt_name}"
-                );
-
+				$this->info("📤 Enviando archivo: {$file->txt_name}");
+                $localTxt = storage_path("app/{$file->txt_path}");
+				$this->sendFile($sftp, $localTxt, "/ToAssurantEFT/{$file->txt_name}");
+				$this->info("✔ TXT enviado: {$file->txt_name}");
+				
                 // -----------------------
                 // 5️⃣ Enviar ZIP después
                 // -----------------------
-                $this->sendFile(
-                    $sftp,
-                    $file->zip_path,
-                    "/ToAssurantEFT/{$file->zip_name}"
-                );
+				$this->info("📤 Enviando archivo: {$file->zip_path}");
+                $localZip = storage_path("app/{$file->zip_path}");
+				$this->sendFile($sftp, $localZip, "/ToAssurantEFT/{$file->zip_name}");
+				$this->info("✔ ZIP enviado: {$file->zip_name}");
 
                 // 6️⃣ Marcar como enviado
                 $file->update([
@@ -78,7 +74,6 @@ class CampaignSendFiles extends Command
                     'error_message' => null,
                 ]);
 
-                $this->info("✔ Envío correcto: {$file->zip_name}");
 
             } catch (\Exception $e) {
 
@@ -87,7 +82,7 @@ class CampaignSendFiles extends Command
                     'error_message' => $e->getMessage()
                 ]);
 
-                $this->error("❌ Error enviando {$file->txt_name}: {$e->getMessage()}");
+                $this->error("❌ Error enviando archivo: {$e->getMessage()}");
             }
         }
 
@@ -99,38 +94,35 @@ class CampaignSendFiles extends Command
      * Enviar archivo por SFTP usando SSH2
      *
      * @param $sftp        recurso SFTP
-     * @param string $relativePath  → path relativo "files/XXX"
+     * @param string $relativePath  ↿path relativo "files/XXX"
      */
-    private function sendFile($sftp, string $relativePath, string $remoteFile)
-    {
-        // Construir path absoluto correcto
-        $localAbsolute = storage_path("app/{$relativePath}");
+    private function sendFile($sftp, $localFile, $remoteFile)
+	{
+		if (!file_exists($localFile)) {
+			throw new \Exception("El archivo local no existe: $localFile");
+		}
 
-        // Validar existencia usando Storage
-        if (!Storage::exists($relativePath)) {
-            throw new \Exception("Archivo local no encontrado: {$localAbsolute}");
-        }
+		$stream = @fopen("ssh2.sftp://{$sftp}{$remoteFile}", 'w');
 
-        // Abrir archivo remoto
-        $stream = fopen("ssh2.sftp://{$sftp}{$remoteFile}", 'w');
+		if (!$stream) {
+			throw new \Exception("No se pudo abrir el archivo remoto: $remoteFile");
+		}
 
-        if (!$stream) {
-            throw new \Exception("No se pudo abrir archivo remoto: {$remoteFile}");
-        }
+		$local = fopen($localFile, 'r');
 
-        // Abrir archivo local
-        $localStream = fopen($localAbsolute, 'r');
+		if (!$local) {
+			fclose($stream);
+			throw new \Exception("No se pudo abrir el archivo local: $localFile");
+		}
 
-        if (!$localStream) {
-            throw new \Exception("No se pudo abrir archivo local: {$localAbsolute}");
-        }
+		while (!feof($local)) {
+			if (fwrite($stream, fread($local, 8192)) === false) {
+				throw new \Exception("Error escribiendo en archivo remoto: $remoteFile");
+			}
+		}
 
-        // Transferir chunks
-        while (!feof($localStream)) {
-            fwrite($stream, fread($localStream, 8192));
-        }
+		fclose($local);
+		fclose($stream);
+	}
 
-        fclose($localStream);
-        fclose($stream);
-    }
 }
