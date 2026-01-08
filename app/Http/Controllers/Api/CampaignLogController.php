@@ -5,18 +5,15 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\ApiController;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-use App\Models\Image;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
-use MailerSend\MailerSend;
-use MailerSend\Helpers\Builder\Recipient;
-use MailerSend\Helpers\Builder\Attachment as MsAttachment;
-use MailerSend\Helpers\Builder\EmailParams;
 use App\Mail\CertificadoHTML;
 use Illuminate\Support\Facades\Mail;
 use App\Models;
 use Helper;
+
+use Illuminate\Support\Facades\Bus;
+use App\Jobs\SendCampaignCertificateMail;
 
 class CampaignLogController extends ApiController
 {
@@ -127,42 +124,7 @@ class CampaignLogController extends ApiController
 
                                     case 'mailersend':
 
-                                        $from = self::sendmail()['mailersend']['proteccion-motocare']['from'];
-                                        $bcc  = self::sendmail()['mailersend']['proteccion-motocare']['bcc'];
-                                        $ms = new MailerSend([
-                                            'api_key' => self::sendmail()['mailersend']['proteccion-motocare']['type'] == 'prod' ? self::sendmail()['mailersend']['proteccion-motocare']['token_prod'] : self::sendmail()['mailersend']['proteccion-motocare']['token_dev']
-                                        ]);
-
-                                        // Renderizar el HTML del Blade a string (igual que tu mailable)
-                                        $html = view('emails.certificado.html', [
-                                            'nombre'           => $data['nombre'],
-                                            'detalleCobertura' => $data['detalleCobertura'],
-                                            'costoMensual'     => $data['costoMensual'],
-                                        ])->render();
-
-                                        // Destinatarios
-                                        $to  = [ new Recipient($request->params['email']['value'], '') ];
-                                        $bcc = [ new Recipient($bcc, '') ];
-
-                                        // Adjuntar el PDF (usa el binario que ya generaste)
-                                        $attachments = [
-                                            new MsAttachment($pdfContent, $filename) // MIME se infiere; opcionalmente podés setearlo
-                                        ];
-
-                                        $email = (new EmailParams())
-                                            ->setFrom($from)
-                                            ->setFromName($from_name)
-                                            ->setRecipients($to)
-                                            ->setBcc($bcc)
-                                            ->setSubject($subject)
-                                            ->setHtml($html)
-                                            ->setAttachments($attachments);
-
-                                        $ms->email->send($email);
-
-                                        // ✅ Guardar flag de envío correcto
-                                        $campaignlog->send_mail = 1;
-                                        $campaignlog->save();
+                                        Bus::dispatchSync(new SendCampaignCertificateMail($campaignlog->id));
                                         break;
                                 }
 
