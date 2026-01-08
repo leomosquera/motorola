@@ -26,7 +26,16 @@ class SendCampaignCertificateMail
 
     public function handle(): void
     {
+
+        Log::channel('mailersend')->info('JOB EXECUTED', [
+            'campaign_log_id' => $this->campaignLogId
+        ]);
+
         $campaignlog = CampaignLog::find($this->campaignLogId);
+
+        Log::channel('mailersend')->info('JOB START', [
+            'campaign_log_id' => $campaignlog->id
+        ]);
 
         if (!$campaignlog) {
             Log::channel('mailersend')->error('CampaignLog NOT FOUND', [
