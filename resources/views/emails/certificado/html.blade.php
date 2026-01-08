@@ -43,7 +43,7 @@
                 </tr>
                 <tr>
                     <td style="font-family: DejaVu Sans, Arial, sans-serif; font-size:14px; color:#333; padding:0 70px;">
-                        <b style="font-size:16px;">Costo Mensual:</b> {{ $costoMensual }}
+                        <b style="font-size:16px;">Costo Mensual:</b> $ {{ $costoMensual }}
                     </td>
                 </tr>
                 <tr><td height="5"></td></tr>
