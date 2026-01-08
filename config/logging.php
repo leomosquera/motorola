@@ -99,6 +99,13 @@ return [
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],
+
+        'mailersend' => [
+            'driver' => 'single',
+            'path'   => storage_path('logs/mailersend.log'),
+            'level'  => 'debug',
+        ],
+
     ],
 
 ];
