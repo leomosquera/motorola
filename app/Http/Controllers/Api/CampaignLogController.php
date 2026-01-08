@@ -72,33 +72,35 @@ class CampaignLogController extends ApiController
 						foreach ($services->products->data as $product){
 							//el producto que coincide con el guardado en params es el elegido
 							if($request->params['codarticulo']['value'] == $product->code){
-								// Datos dinámicos
-								$data = [
-									'nombre'           => substr(preg_replace('/\s+/', ' ', $request->params['nombres']['value']), 0, 50),
-									'detalleCobertura' => $product->cobertura,
-									'costoMensual'     => number_format($product->precio_seguro, 2, ',', '.').' por mes',
-								];
-								
-								// 1) Generar PDF desde Blade
-								$pdf = Pdf::loadView('emails.certificado.html', $data)->setPaper('A4', 'portrait');
-								// Si usás URLs externas en imágenes:
-								// $pdf->setOption(['isRemoteEnabled' => true]);
 
-								$pdfContent = $pdf->output();
-
-								// 2) Guardar en storage/app/certificados/
-								$filename = 'Solicitud-de-compra-'.date('YmdHis').'.pdf';
-								$path = 'certificados/'.$filename; // relativo a storage/app
-								Storage::put($path, $pdfContent);
-
-								// 3) Enviar mail con HTML + adjuntar PDF
-                                $subject = '¡Gracias! Hemos recibido tu solicitud de compra';
-                                $from = '';
-                                $from_name = 'Protección Motocare';
-                                $bcc  = '';
-
+                                //tipo de envio de mail, local o por sendermail
                                 switch (self::sendmail()['type']) {
                                     case 'local':
+
+                                        // Datos dinámicos
+                                        $data = [
+                                            'nombre'           => substr(preg_replace('/\s+/', ' ', $request->params['nombres']['value']), 0, 50),
+                                            'detalleCobertura' => $product->cobertura,
+                                            'costoMensual'     => number_format($product->precio_seguro, 2, ',', '.').' por mes',
+                                        ];
+                                        
+                                        // 1) Generar PDF desde Blade
+                                        $pdf = Pdf::loadView('emails.certificado.html', $data)->setPaper('A4', 'portrait');
+                                        // Si usás URLs externas en imágenes:
+                                        // $pdf->setOption(['isRemoteEnabled' => true]);
+
+                                        $pdfContent = $pdf->output();
+
+                                        // 2) Guardar en storage/app/certificados/
+                                        $filename = 'Solicitud-de-compra-'.date('YmdHis').'.pdf';
+                                        $path = 'certificados/'.$filename; // relativo a storage/app
+                                        Storage::put($path, $pdfContent);
+
+                                        // 3) Enviar mail con HTML + adjuntar PDF
+                                        $subject = '¡Gracias! Hemos recibido tu solicitud de compra';
+                                        $from = '';
+                                        $from_name = 'Protección Motocare';
+                                        $bcc  = '';
 
                                         $from = self::sendmail()['local']['from'];
                                         $bcc  = self::sendmail()['local']['bcc'];
