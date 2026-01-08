@@ -1,8 +1,9 @@
 @php
-    $rutaImagenLogoAssurant   = asset('storage/emails/assurant-logo.png');
-    $rutaImagenLogoMotocare   = asset('storage/emails/motocare-logo.png');
-    $rutaImagenBannerMotocare = asset('storage/emails/motocare-banner.jpg');
-    $rutaImagenFooterSSN      = asset('storage/emails/ssn-footer.png');
+    // Para DOMPDF es más seguro usar public_path (archivos locales)
+    $rutaImagenLogoAssurant   = storage_path('app/public/emails/assurant-logo.png');
+    $rutaImagenLogoMotocare   = storage_path('app/public/emails/motocare-logo.png');
+    $rutaImagenBannerMotocare = storage_path('app/public/emails/motocare-banner.jpg');
+    $rutaImagenFooterSSN      = storage_path('app/public/emails/ssn-footer.png');
 @endphp
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff;">
     <tr>
