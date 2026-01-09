@@ -22,12 +22,8 @@ class CampaignGenerateFiles extends Command
 
     public function handle()
     {
-        $includeToday = $this->option('include-today') !== null
-            ? true
-            : config('global.log.include_today', true);
-
-        $force = $this->option('force') 
-            ?? config('global.log.force', false);
+        $includeToday = $this->option('include-today') === true;
+        $force        = $this->option('force') === true;
 
         $dealer_code = 'MO13';
         $baseDir     = config('global.storage.files'); // "files/"
@@ -64,8 +60,10 @@ class CampaignGenerateFiles extends Command
             // -----------------------------
             // 2️⃣ Limpiar archivos previos si corresponde
             // -----------------------------
-            if ($day->isToday() || $force) {
-
+            if (
+                ($day->isToday() && $includeToday)
+                || (!$day->isToday() && $force)
+            ) {
                 if (Storage::exists($relativeTxt)) {
                     Storage::delete($relativeTxt);
                 }
@@ -78,7 +76,10 @@ class CampaignGenerateFiles extends Command
             // -----------------------------
             // 3️⃣ Buscar los logs a exportar
             // -----------------------------
-            if ($day->isToday() || $force) {
+            if (
+                ($day->isToday() && $includeToday)
+                || $force
+            ) {
                 $data = CampaignLog::where('payment_code', 'CC')
                     ->where('event', 'medio de pago')
                     ->whereBetween('created_at', [$from, $to])
@@ -170,8 +171,9 @@ class CampaignGenerateFiles extends Command
 
             // -----------------------------
             // 5️⃣ Agregar header al TXT
+            // blindaje: Si por alguna razón falló el append (permisos, disco lleno), este prepend puede fallar.
             // -----------------------------
-            if ($log_count > 0) {
+            if ($log_count > 0 && Storage::exists($relativeTxt)) {
                 $header = 'HH¦'.$dealer_code.'¦'.$day->format('Ymd').'¦'.$log_count.'¦';
                 Storage::prepend($relativeTxt, Helper::utf8toansi($header));
             }
@@ -179,38 +181,44 @@ class CampaignGenerateFiles extends Command
             // -----------------------------
             // 6️⃣ Crear ZIP
             // -----------------------------
-            $zip = new ZipArchive();
-            if ($zip->open($absoluteZip, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+            if (!empty($logsProcesados)) {
+                $zip = new ZipArchive();
+                if ($zip->open($absoluteZip, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
 
-                foreach ($logsProcesados as $logData) {
+                    foreach ($logsProcesados as $logData) {
 
-                    $idLog = $logData['id_log'];
-                    $id    = $logData['id'];
+                        $idLog = $logData['id_log'];
+                        $id    = $logData['id'];
 
-                    $folderName = $id.'-log_'.$idLog.'/';
-                    $zip->addEmptyDir($folderName);
+                        $folderName = $id.'-log_'.$idLog.'/';
+                        $zip->addEmptyDir($folderName);
 
-                    $excelPath = app(ReporteService::class)->generateExcel($idLog, $id);
-                    $pdfPath   = app(TerminosService::class)->generatePdf($idLog, $id);
+                        $excelPath = app(ReporteService::class)->generateExcel($idLog, $id);
+                        $pdfPath   = app(TerminosService::class)->generatePdf($idLog, $id);
 
-                    $zip->addFile($excelPath, $folderName.basename($excelPath));
-                    $zip->addFile($pdfPath,   $folderName.basename($pdfPath));
+                        $zip->addFile($excelPath, $folderName.basename($excelPath));
+                        $zip->addFile($pdfPath,   $folderName.basename($pdfPath));
+                    }
+
+                    $zip->close();
                 }
-
-                $zip->close();
             }
 
             // -----------------------------
             // 7️⃣ Registrar en campaign_files
             // -----------------------------
-            CampaignFile::create([
-                'txt_name' => $txtName,
-                'zip_name' => $zipName,
-                'txt_path' => $relativeTxt, // SOLO RUTA RELATIVA
-                'zip_path' => $relativeZip,
-                'day'      => $day->format('Y-m-d'),
-                'status'   => 'generated'
-            ]);
+            CampaignFile::updateOrCreate(
+                [
+                    'day' => $day->format('Y-m-d'),
+                    'txt_name' => $txtName,
+                ],
+                [
+                    'zip_name' => $zipName,
+                    'txt_path' => $relativeTxt,
+                    'zip_path' => $relativeZip,
+                    'status'   => 'generated'
+                ]
+            );
 
             $this->info("✔ Archivo generado: {$txtName}");
         }
