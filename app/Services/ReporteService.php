@@ -120,7 +120,7 @@ class ReporteService
                 'Pers_SO'              => ($params && isset($params->sujetoso->value)) ? $params->sujetoso->value : 'NO',
                 'Term_Cond'            => ($params && isset($params->terms_conds->value) && $params->terms_conds->value == 1) ? 'SI' : 'NO',
                 'Term_File_Version'    => ($params && isset($params->terms_version->value)) ? $params->terms_version->value : '',
-                'Emails_Promocion'     => ($params && isset($params->newsletter->value) && $params->newsletter->value == 1) ? 'SI' : 'NO',
+                //'Emails_Promocion'     => ($params && isset($params->newsletter->value) && $params->newsletter->value == 1) ? 'SI' : 'NO',
                 'Medio_Pago'           => ($params && isset($params->mpago->value)) ? $params->mpago->value : '',
                 'CC_Nombre'            => ($params && isset($params->tnombres->value)) ? substr(preg_replace('/\s+/', ' ', $params->tnombres->value), 0, 50) : '',
                 'CC_Nro'               => ($params && isset($params->ntarjeta->value)) ? $params->ntarjeta->value : '',
