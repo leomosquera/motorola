@@ -140,7 +140,7 @@ class CampaignGenerateFiles extends Command
                     $txt .= ($celular_data->elita ?? '').'¦6¦MOTOROLA¦';
                     $txt .= substr(trim($product->version), 0, 30).'¦';
                     $txt .= substr($params->imei->value, 0, 20).'¦1¦12¦';
-                    $txt .= $product->precio_seguro.'¦C¦¦';
+                    $txt .= $product->precio_seguro.'¦C¦¦¦';
                     $txt .= substr(trim($params->tnombres->value), 0, 50).'¦';
                     $txt .= $params->tcctype->value.'¦';
                     $txt .= $params->ntarjeta->value.'¦';
