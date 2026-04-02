@@ -29,19 +29,15 @@ class CelularController extends ApiController
     public function versiones(Request $request)
 	{
 		try {
-			$result = Celular::where('status', 1)
-				->where('name', $request->modelo)
-				->distinct()
-				->pluck('version');
+			$data = Celular::distinct()->select('version')->where('status', 1)->where('name',$request->modelo)->groupBy('version');
+            //dd($data->get());
+            if($data)
+                return $this->successResponse($data->get(),'Campaña encontrada', 302);
+            else
+                return $this->errorResponse('Campaña no encontrada', 404);
 
-			if ($result->isNotEmpty()) {
-				return $this->successResponse($result, 'Campaña encontrada', 200);
-			}
-
-			return $this->errorResponse('Campaña no encontrada', 404);
-
-		} catch (\Exception $e) {
-			return $this->errorResponse('Error en servicios.', 500);
+		}catch(\Exception $e){
+            return $this->errorResponse('Error en servicios.', 404);
 		}
 	}
 
