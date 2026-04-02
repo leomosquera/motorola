@@ -27,45 +27,57 @@ class CelularController extends ApiController
     }
 
     public function versiones(Request $request)
-    {
-        try{
-            $data = Celular::distinct()->select('version')->where('status', 1)->where('name',$request->modelo)->groupBy('version');
-            //dd($data->get());
-            if($data)
-                return $this->successResponse($data->get(),'Campaña encontrada', 302);
-            else
-                return $this->errorResponse('Campaña no encontrada', 404);
-        }
-        catch(\Exception $e){
-            return $this->errorResponse('Error en servicios.', 404);
-            //return $this->errorResponse($e, 404);
-        }
-    }
+	{
+		try {
+			$result = Celular::where('status', 1)
+				->where('name', $request->modelo)
+				->distinct()
+				->pluck('version');
+
+			if ($result->isNotEmpty()) {
+				return $this->successResponse($result, 'Campaña encontrada', 200);
+			}
+
+			return $this->errorResponse('Campaña no encontrada', 404);
+
+		} catch (\Exception $e) {
+			return $this->errorResponse('Error en servicios.', 500);
+		}
+	}
 
     public function coberturas(Request $request)
-    {
-        try{
-            $data = Celular::select('code', 'elita', 'gama', 'name', 'version', 'cobertura', 'precio_bruto_equipo', 'precio_seguro')
-            ->where('status', 1)
-            ->where('name', $request->modelo)
-            ->where('version', $request->version)
-            ->groupBy('code')
-            ->orderBy('precio_seguro', 'ASC')
-            ->get()
-            ->map(function ($item) {
-                $item->elita = base64_encode($item->elita); // Encripta el campo 'elita'
-                return $item;
-            })->toArray();
-            //dd($data->get());
-            if($data)
-                return $this->successResponse($data,'Campaña encontrada', 302);
-            else
-                return $this->errorResponse('Campaña no encontrada', 404);
-        }
-        catch(\Exception $e){
-            return $this->errorResponse('Error en servicios.', 404);
-            //return $this->errorResponse($e, 404);
-        }
-    }
+	{
+		try {
+			$data = Celular::select(
+					'code',
+					'elita',
+					'gama',
+					'name',
+					'version',
+					'cobertura',
+					'precio_bruto_equipo',
+					'precio_seguro'
+				)
+				->where('status', 1)
+				->where('name', $request->modelo)
+				->where('version', $request->version)
+				->groupBy('code')
+				->orderBy('precio_seguro', 'ASC')
+				->get()
+				->map(function ($item) {
+					$item->elita = base64_encode($item->elita);
+					return $item;
+				});
+
+			if ($data->isNotEmpty()) {
+				return $this->successResponse($data, 'Campaña encontrada', 200);
+			}
+
+			return $this->errorResponse('Campaña no encontrada', 404);
+
+		} catch (\Exception $e) {
+			return $this->errorResponse('Error en servicios.', 500);
+		}
+	}
 
 }

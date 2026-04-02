@@ -42,7 +42,7 @@ Route::group(['middleware' => ['auth:api']],
         Route::get('assurant/stores',                       [Controllers\Api\AssurantController::class, 'stores']);
         Route::post('assurant/terms',                       [Controllers\Api\AssurantController::class, 'terms']);
         Route::get('celular/modelos',                       [Controllers\Api\CelularController::class, 'modelos']);
-        Route::get('celular/versiones/{modelo}',            [Controllers\Api\CelularController::class, 'versiones']);
-        Route::get('celular/coberturas/{modelo}/{version}', [Controllers\Api\CelularController::class, 'coberturas']);
+        Route::post('celular/versiones',                    [Controllers\Api\CelularController::class, 'versiones']);
+        Route::post('celular/coberturas',                   [Controllers\Api\CelularController::class, 'coberturas']);
     }
 );

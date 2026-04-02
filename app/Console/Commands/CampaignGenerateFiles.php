@@ -5,106 +5,115 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Carbon\Carbon;
 use App\Helper\Helper;
-use App\Services\ReporteService; // <-- tu service para crear Excel y PDF
+use App\Services\ReporteService;
 use App\Services\TerminosService;
-use Storage;
+use Illuminate\Support\Facades\Storage;
 use ZipArchive;
 use App\Models\CampaignLog;
 use App\Models\CampaignFile;
 use App\Models\Celular;
 use App\Models\Assurant\Provincia;
 
-
 class CampaignGenerateFiles extends Command
 {
-    protected $signature = 'campaign:generate-files {--force} {--include-today}';
+    protected $signature = 'campaign:generate-files 
+        {--day= : Procesar un día específico (YYYY-MM-DD)}
+        {--range : Procesar rango según config.subdays}
+        {--force : Sobrescribir archivos existentes}
+        {--include-today : Incluir hoy}';
+
     protected $description = 'Genera archivos TXT y ZIP para la campaña (formato Assurant).';
 
     public function handle()
     {
-        $includeToday = $this->option('include-today') === true;
-        $force        = $this->option('force') === true;
+        $includeToday = $this->option('include-today');
+        $force        = $this->option('force');
 
         $dealer_code = 'MO13';
-        $baseDir     = config('global.storage.files'); // "files/"
-        $subdays     = max(1, (int) config('global.log.subdays', 1));
+        $baseDir     = config('global.storage.files');
 
-        for ($d = 0; $d < $subdays; $d++) {
+        /* =========================
+         * 1️⃣ Definir días a procesar
+         * ========================= */
+        $days = [];
 
-            $day = Carbon::today()->subDays($d);
+        if ($this->option('day')) {
+
+            $days[] = Carbon::createFromFormat('Y-m-d', $this->option('day'));
+
+        } elseif ($this->option('range')) {
+
+            $subdays = max(1, (int) config('global.log.subdays', 1));
+
+            for ($d = 0; $d < $subdays; $d++) {
+                $days[] = Carbon::today()->subDays($d);
+            }
+
+        } else {
+
+            // 👉 default = AYER (modo cron seguro)
+            $days[] = Carbon::yesterday();
+        }
+
+        /* =========================
+         * 2️⃣ Loop de días
+         * ========================= */
+        foreach ($days as $day) {
+
+            $this->info("📅 Procesando: ".$day->format('Y-m-d'));
 
             if ($day->isToday() && !$includeToday) {
+                $this->warn("⚠ Se omite hoy (usar --include-today)");
+                continue;
+            }
+
+            // 🔒 NO pisar enviados
+            $existing = CampaignFile::where('day', $day->format('Y-m-d'))->first();
+
+            if ($existing && $existing->status === 'sent' && !$force) {
+                $this->warn("⚠ Día ya enviado. Se omite.");
                 continue;
             }
 
             $from = $day->copy()->startOfDay();
             $to   = $day->copy()->endOfDay();
 
-            // -----------------------------
-            // 1️⃣ Definir nombres y rutas limpias
-            // -----------------------------
             $txtName  = "AMA_{$dealer_code}_ENROLLMENT_MOTO_NV_".$day->format('Ymd').".txt";
             $zipName  = pathinfo($txtName, PATHINFO_FILENAME).'.zip';
 
-            // Paths RELATIVOS siempre dentro de storage/app
-            $relativeTxt = $baseDir . $txtName;  // files/...
-            $relativeZip = $baseDir . $zipName;  // files/...
+            $relativeTxt = $baseDir . $txtName;
+            $relativeZip = $baseDir . $zipName;
 
-            // Paths ABSOLUTOS en filesystem
-            $absoluteTxt = storage_path("app/{$relativeTxt}");
             $absoluteZip = storage_path("app/{$relativeZip}");
 
-            $logsProcesados = [];
-            $log_count = 0;
-
-            // -----------------------------
-            // 2️⃣ Limpiar archivos previos si corresponde
-            // -----------------------------
-            if (
-                ($day->isToday() && $includeToday)
-                || (!$day->isToday() && $force)
-            ) {
-                if (Storage::exists($relativeTxt)) {
-                    Storage::delete($relativeTxt);
-                }
-
-                if (Storage::exists($relativeZip)) {
-                    Storage::delete($relativeZip);
-                }
+            /* =========================
+             * 3️⃣ Limpieza (solo si force)
+             * ========================= */
+            if ($force) {
+                Storage::delete([$relativeTxt, $relativeZip]);
             }
 
-            // -----------------------------
-            // 3️⃣ Buscar los logs a exportar
-            // -----------------------------
-            if (
-                ($day->isToday() && $includeToday)
-                || $force
-            ) {
-                $data = CampaignLog::where('payment_code', 'CC')
-                    ->where('event', 'medio de pago')
-                    ->whereBetween('created_at', [$from, $to])
-                    ->orderBy('id')
-                    ->with('store');
-            } else {
-                $data = CampaignLog::where('payment_code', 'CC')
-                    ->where('event', 'medio de pago')
-                    ->whereNull('file')
-                    ->whereBetween('created_at', [$from, $to])
-                    ->orderBy('id')
-                    ->with('store');
+            /* =========================
+             * 4️⃣ Obtener logs
+             * ========================= */
+            $query = CampaignLog::where('payment_code', 'CC')
+                ->where('event', 'medio de pago')
+                ->whereBetween('created_at', [$from, $to])
+                ->orderBy('id')
+                ->with('store');
+
+            if (!$force) {
+                $query->whereNull('file');
             }
 
-            $logs = $data->get();
-
-            if ($logs->isEmpty()) {
-                continue;
-            }
-
+            $logs = $query->get();
             $log_count = $logs->count();
 
-            // -----------------------------
-            // 4️⃣ Procesar cada log → escribir TXT
-            // -----------------------------
+            $logsProcesados = [];
+
+            /* =========================
+             * 5️⃣ Generar TXT (líneas)
+             * ========================= */
             foreach ($logs as $log) {
 
                 $params   = json_decode($log->params);
@@ -155,7 +164,6 @@ class CampaignGenerateFiles extends Command
 
                     Storage::append($relativeTxt, Helper::utf8toansi($txt));
 
-                    // Actualizar log
                     $log->file = $txtName;
                     $log->payment_verified = 1;
                     $log->save();
@@ -169,44 +177,42 @@ class CampaignGenerateFiles extends Command
                 }
             }
 
-            // -----------------------------
-            // 5️⃣ Agregar header al TXT
-            // blindaje: Si por alguna razón falló el append (permisos, disco lleno), este prepend puede fallar.
-            // -----------------------------
-            if ($log_count > 0 && Storage::exists($relativeTxt)) {
-                $header = 'HH¦'.$dealer_code.'¦'.$day->format('Ymd').'¦'.$log_count.'¦';
-                Storage::prepend($relativeTxt, Helper::utf8toansi($header));
+            /* =========================
+             * 6️⃣ Header SIEMPRE
+             * ========================= */
+            if (!Storage::exists($relativeTxt)) {
+                Storage::put($relativeTxt, '');
             }
 
-            // -----------------------------
-            // 6️⃣ Crear ZIP
-            // -----------------------------
-            if (!empty($logsProcesados)) {
-                $zip = new ZipArchive();
-                if ($zip->open($absoluteZip, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+            $header = 'HH¦'.$dealer_code.'¦'.$day->format('Ymd').'¦'.$log_count.'¦';
+            Storage::prepend($relativeTxt, Helper::utf8toansi($header));
 
-                    foreach ($logsProcesados as $logData) {
+            /* =========================
+             * 7️⃣ ZIP (siempre)
+             * ========================= */
+            $zip = new ZipArchive();
 
-                        $idLog = $logData['id_log'];
-                        $id    = $logData['id'];
+            if ($zip->open($absoluteZip, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
 
-                        $folderName = $id.'-log_'.$idLog.'/';
-                        $zip->addEmptyDir($folderName);
+                foreach ($logsProcesados as $logData) {
 
-                        $excelPath = app(ReporteService::class)->generateExcel($idLog, $id);
-                        $pdfPath   = app(TerminosService::class)->generatePdf($idLog, $id);
+                    $folderName = $logData['id'].'-log_'.$logData['id_log'].'/';
 
-                        $zip->addFile($excelPath, $folderName.basename($excelPath));
-                        $zip->addFile($pdfPath,   $folderName.basename($pdfPath));
-                    }
+                    $zip->addEmptyDir($folderName);
 
-                    $zip->close();
+                    $excelPath = app(ReporteService::class)->generateExcel($logData['id_log'], $logData['id']);
+                    $pdfPath   = app(TerminosService::class)->generatePdf($logData['id_log'], $logData['id']);
+
+                    $zip->addFile($excelPath, $folderName.basename($excelPath));
+                    $zip->addFile($pdfPath,   $folderName.basename($pdfPath));
                 }
+
+                $zip->close();
             }
 
-            // -----------------------------
-            // 7️⃣ Registrar en campaign_files
-            // -----------------------------
+            /* =========================
+             * 8️⃣ Registrar
+             * ========================= */
             CampaignFile::updateOrCreate(
                 [
                     'day' => $day->format('Y-m-d'),
@@ -220,10 +226,10 @@ class CampaignGenerateFiles extends Command
                 ]
             );
 
-            $this->info("✔ Archivo generado: {$txtName}");
+            $this->info("✔ Generado: {$txtName} ({$log_count} registros)");
         }
 
-        $this->info("Proceso completado.");
+        $this->info("🚀 Proceso completado.");
         return Command::SUCCESS;
     }
 }
