@@ -11,9 +11,60 @@ use App\Models\CampaignLog;
 use App\Models\Celular;
 use App\Models\Assurant\Provincia;
 use App\Models\Assurant\EstadoCivil;
+use Carbon\Carbon;
 
 class ReporteService
 {
+
+    private function getHeaders(): array
+    {
+        return [
+            'Id_Log',
+            'Evento',
+            'Evento_Fecha',
+            'Producto_Modelo',
+            'Producto_Version',
+            'Producto_Precio',
+            'Cobertura',
+            'Cobertura_Precio',
+            'Tienda_Code',
+            'Tienda_Nombre',
+            'Nombre',
+            'Apellido',
+            'Documento',
+            'Cuit',
+            'Fecha_Nac',
+            'Sexo',
+            'Estado_Civil',
+            'Ocupacion',
+            'PTel',
+            'Telefono',
+            'Email',
+            'Imei',
+            'Fecha_Factura_Equipo',
+            'Dir_Calle',
+            'Dir_Calle_Nro',
+            'Dir_Piso',
+            'Dir_Depto',
+            'Dir_Cod_Postal',
+            'Dir_Localidad',
+            'Pers_Politic',
+            'Pers_SO',
+            'Term_Cond',
+            'Term_File_Version',
+            'Medio_Pago',
+            'CC_Nombre',
+            'CC_Nro',
+            'CC_CVV',
+            'CC_Type',
+            'CC_Fecha_Venc',
+            'Email_Enviado',
+            'Fecha_Venta',
+            'File',
+            'IP',
+        ];
+    }
+
     private function getProduct($params, $services)
     {
         $product = null;
@@ -29,6 +80,66 @@ class ReporteService
     }
 
     /**
+     * Genera un Excel vacio
+     */
+    public function generateEmptyExcel($day): string
+    {
+        $day = $day instanceof Carbon ? $day : Carbon::parse($day);
+
+        $spreadsheet = new Spreadsheet();
+
+        // eliminar hoja default
+        $spreadsheet->removeSheetByIndex(0);
+
+        $eventos = [
+            'cotizar',
+            'datos producto',
+            'datos personales',
+            'datos terminos',
+            'medio de pago'
+        ];
+
+        $headers = $this->getHeaders();
+
+        foreach ($eventos as $index => $evento) {
+
+            $sheet = $spreadsheet->createSheet($index);
+            $sheet->setTitle(substr($evento, 0, 31));
+
+            $colIndex = 1;
+
+            foreach ($headers as $header) {
+
+                $colLetter = Coordinate::stringFromColumnIndex($colIndex);
+
+                $sheet->setCellValue($colLetter.'1', $header);
+
+                if (in_array($header, ['Telefono', 'Imei', 'Documento', 'Cuit'])) {
+                    $sheet->getStyle($colLetter)
+                        ->getNumberFormat()
+                        ->setFormatCode(NumberFormat::FORMAT_TEXT);
+                }
+
+                $colIndex++;
+            }
+        }
+
+        $fileName = 'empty_'.$day->format('Ymd').'.xlsx';
+        $path = storage_path('app/temp/'.$fileName);
+
+        if (!is_dir(dirname($path))) {
+            mkdir(dirname($path), 0775, true);
+        }
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save($path);
+
+        $spreadsheet->setActiveSheetIndex(0);
+
+        return $path;
+    }
+
+    /**
      * Genera un Excel donde cada hoja corresponde al último registro
      * de un evento determinado para el id_log dado.
      * Devuelve la ruta física del archivo generado.
@@ -36,20 +147,20 @@ class ReporteService
     public function generateExcel(string $idLog, string $id): string
     {
         // Si no te pasan eventos, definí los que quieras consultar
-        if (empty($eventos)) {
-            $eventos = [
-                'cotizar',
-                'datos producto',
-                'datos personales',
-                'datos terminos',
-                'medio de pago'
-            ];
-        }
+        $eventos = [
+            'cotizar',
+            'datos producto',
+            'datos personales',
+            'datos terminos',
+            'medio de pago'
+        ];
 
         $spreadsheet = new Spreadsheet();
 
         // 1️⃣ eliminamos la hoja por defecto (en blanco)
         $spreadsheet->removeSheetByIndex(0);
+
+        $sheetIndex = 0;
 
         foreach ($eventos as $evento) {
 
@@ -61,7 +172,6 @@ class ReporteService
                 ->first();
 
             if (!$log) {
-                // si no hay registro, podés decidir saltar o crear hoja vacía
                 continue;
             }
 
@@ -135,7 +245,7 @@ class ReporteService
             ];
 
             // Creamos la hoja con el nombre del evento
-            $sheet = $spreadsheet->createSheet();
+            $sheet = $spreadsheet->createSheet($sheetIndex++);
             // los nombres de hoja no pueden superar 31 caracteres
             $sheet->setTitle(substr($evento, 0, 31));
 
@@ -172,6 +282,21 @@ class ReporteService
             }
         }
 
+        if ($spreadsheet->getSheetCount() === 0) {
+
+            $sheet = $spreadsheet->createSheet(0);
+            $sheet->setTitle('Sin Datos');
+
+            $headers = $this->getHeaders();
+
+            $colIndex = 1;
+            foreach ($headers as $header) {
+                $colLetter = Coordinate::stringFromColumnIndex($colIndex);
+                $sheet->setCellValue($colLetter.'1', $header);
+                $colIndex++;
+            }
+        }
+
         // Guardamos en storage/app/temp
         $fileName = $id.'-log_'.$idLog.'.xlsx';
         $path = storage_path('app/temp/'.$fileName);
@@ -182,6 +307,8 @@ class ReporteService
         $writer = new Xlsx($spreadsheet);
         $writer->save($path);
 
+        $spreadsheet->setActiveSheetIndex(0);
+        
         return $path; // listo para agregar al ZIP
     }
 }

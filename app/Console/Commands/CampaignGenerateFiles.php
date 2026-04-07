@@ -70,8 +70,8 @@ class CampaignGenerateFiles extends Command
             // 🔒 NO pisar enviados
             $existing = CampaignFile::where('day', $day->format('Y-m-d'))->first();
 
-            if ($existing && $existing->status === 'sent' && !$force) {
-                $this->warn("⚠ Día ya enviado. Se omite.");
+            if ($existing && !$force) {
+                $this->warn("⚠ Día {$day->format('Y-m-d')} ya fue procesado. Se omite (usar --force para regenerar).");
                 continue;
             }
 
@@ -91,6 +91,14 @@ class CampaignGenerateFiles extends Command
              * ========================= */
             if ($force) {
                 Storage::delete([$relativeTxt, $relativeZip]);
+
+                CampaignLog::where('payment_code', 'CC')
+                    ->where('event', 'medio de pago')
+                    ->whereBetween('created_at', [$from, $to])
+                    ->update([
+                        'file' => null,
+                        'payment_verified' => 0,
+                    ]);
             }
 
             /* =========================
@@ -194,20 +202,32 @@ class CampaignGenerateFiles extends Command
 
             if ($zip->open($absoluteZip, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
 
-                foreach ($logsProcesados as $logData) {
+                if (!empty($logsProcesados)) {
 
-                    $folderName = $logData['id'].'-log_'.$logData['id_log'].'/';
+                    foreach ($logsProcesados as $logData) {
 
-                    $zip->addEmptyDir($folderName);
+                        $folderName = $logData['id'].'-log_'.$logData['id_log'].'/';
 
-                    $excelPath = app(ReporteService::class)->generateExcel($logData['id_log'], $logData['id']);
-                    $pdfPath   = app(TerminosService::class)->generatePdf($logData['id_log'], $logData['id']);
+                        $zip->addEmptyDir($folderName);
 
-                    $zip->addFile($excelPath, $folderName.basename($excelPath));
-                    $zip->addFile($pdfPath,   $folderName.basename($pdfPath));
+                        $excelPath = app(ReporteService::class)->generateExcel($logData['id_log'], $logData['id']);
+                        $pdfPath   = app(TerminosService::class)->generatePdf($logData['id_log'], $logData['id']);
+
+                        $zip->addFile($excelPath, $folderName.basename($excelPath));
+                        $zip->addFile($pdfPath,   $folderName.basename($pdfPath));
+                    }
+
+                } else {
+
+                    // Excel vacío con headers
+                    $emptyExcelPath = app(ReporteService::class)->generateEmptyExcel($day);
+
+                    $zip->addFile($emptyExcelPath, basename($emptyExcelPath));
                 }
 
                 $zip->close();
+            } else {
+                throw new \Exception("No se pudo crear el ZIP: {$absoluteZip}");
             }
 
             /* =========================
