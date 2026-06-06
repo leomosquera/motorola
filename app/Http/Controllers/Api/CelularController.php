@@ -58,7 +58,7 @@ class CelularController extends ApiController
 				->where('name', $request->modelo)
 				->where('version', $request->version)
 				->groupBy('code')
-				->orderBy('precio_seguro', 'ASC')
+				->orderBy('precio_seguro', 'DESC')
 				->get()
 				->map(function ($item) {
 					$item->elita = base64_encode($item->elita);
