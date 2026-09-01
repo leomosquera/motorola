@@ -1,8 +1,5 @@
 /node_modules
-/public/css
-/public/js
-/public/media
-/public/plugins
+/public
 /storage/*.key
 /storage
 /vendor
@@ -14,8 +11,3 @@ Homestead.yaml
 npm-debug.log
 yarn-error.log
 _ide_helper.php
-/app/Providers/AppServiceProvider.php
-server.php
-/public/index.php
-/config/session.php
-/config/enviroment.php

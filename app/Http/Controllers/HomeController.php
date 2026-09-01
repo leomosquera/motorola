@@ -13,7 +13,9 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Carbon\Carbon;
 use App\Helper\Helper;
 use App\Models;
-use Storage;
+use Illuminate\Support\Facades\Storage;
+
+/* Nuevas funcionalidades */
 use ZipArchive;
 use App\Services\ReporteService; // <-- tu service para crear Excel y PDF
 use App\Services\TerminosService;
@@ -529,18 +531,6 @@ class HomeController extends Controller
         //header('Content-type: application/txt');
 
         //dd(33);
-    }
-
-    public function pruebas(){
-        $count = 0;
-        $inspcar = Models\InspectionCar::where('_id','8gfe4z81eoowckkgoogkkcg0')->first() ?? false;
-        foreach ($inspcar->images()->get() as $image){
-            //dd(Config::get('models.inspection-car.image.dir').$image->image);
-            if (Storage::exists(Config::get('models.inspection-car.image.dir').$image->image)) {
-                $count++;
-            }
-        }
-        dd($count);
     }
 
     public function index(){
