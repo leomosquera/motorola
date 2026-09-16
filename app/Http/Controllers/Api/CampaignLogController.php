@@ -85,7 +85,7 @@ class CampaignLogController extends ApiController
                                         ];
                                         
                                         // 1) Generar PDF desde Blade
-                                        $pdf = Pdf::loadView('emails.certificado.html', $data)->setPaper('A4', 'portrait');
+                                        $pdf = Pdf::loadView('emails.certificado.pdf', $data)->setPaper('A4', 'portrait');
                                         // Si usás URLs externas en imágenes:
                                         // $pdf->setOption(['isRemoteEnabled' => true]);
 

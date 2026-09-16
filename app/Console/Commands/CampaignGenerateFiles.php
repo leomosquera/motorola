@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use App\Helper\Helper;
 use App\Services\ReporteService;
 use App\Services\TerminosService;
+use App\Services\CertificadoService;
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
 use App\Models\CampaignLog;
@@ -178,7 +179,8 @@ class CampaignGenerateFiles extends Command
 
                     $logsProcesados[] = [
                         'id_log' => $log->id_log,
-                        'id'     => $log->id
+                        'id'     => $log->id,
+                        'log'    => $log,
                     ];
 
                     break;
@@ -213,8 +215,17 @@ class CampaignGenerateFiles extends Command
                         $excelPath = app(ReporteService::class)->generateExcel($logData['id_log'], $logData['id']);
                         $pdfPath   = app(TerminosService::class)->generatePdf($logData['id_log'], $logData['id']);
 
+                        $certificadoService = app(CertificadoService::class);
+                        $certificadoData = $certificadoService->buildData($logData['log']);
+                        $certificadoPdf  = $certificadoService->generatePdf($certificadoData);
+                        $certificadoName = $logData['id'].'-solicitud_'.$logData['id_log'].'.pdf';
+
                         $zip->addFile($excelPath, $folderName.basename($excelPath));
                         $zip->addFile($pdfPath,   $folderName.basename($pdfPath));
+
+                        if (!$zip->addFromString($folderName.$certificadoName, $certificadoPdf)) {
+                            throw new \RuntimeException("No se pudo agregar el certificado al ZIP: {$certificadoName}");
+                        }
                     }
 
                 } else {

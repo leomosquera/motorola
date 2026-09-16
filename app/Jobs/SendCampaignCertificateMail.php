@@ -3,13 +3,13 @@
 namespace App\Jobs;
 
 use App\Models\CampaignLog;
+use App\Services\CertificadoService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use MailerSend\MailerSend;
 use MailerSend\Helpers\Builder\Recipient;
 use MailerSend\Helpers\Builder\EmailParams;
 use MailerSend\Helpers\Builder\Attachment as MsAttachment;
-use Barryvdh\DomPDF\Facade\Pdf;
 
 class SendCampaignCertificateMail
 {
@@ -49,8 +49,7 @@ class SendCampaignCertificateMail
             /* ============================
              * DATOS BASE
              * ============================ */
-            $params   = json_decode($campaignlog->params, true);
-            $services = json_decode($campaignlog->services);
+            $params = json_decode($campaignlog->params, true);
 
             $emailTo = $params['email']['value'] ?? null;
 
@@ -59,36 +58,15 @@ class SendCampaignCertificateMail
             }
 
             /* ============================
-             * BUSCAR PRODUCTO SELECCIONADO
-             * ============================ */
-            $producto = null;
-            foreach ($services->products->data ?? [] as $item) {
-                if (($params['codarticulo']['value'] ?? null) === $item->code) {
-                    $producto = $item;
-                    break;
-                }
-            }
-
-            if (!$producto) {
-                throw new \Exception('Producto no encontrado para el codarticulo');
-            }
-
-            /* ============================
              * DATA PARA PDF / MAIL
              * ============================ */
-            $data = [
-                'nombre'           => substr(preg_replace('/\s+/', ' ', $params['nombres']['value'] ?? ''), 0, 50),
-                'detalleCobertura' => $producto->cobertura,
-                'costoMensual'     => number_format($producto->precio_seguro, 2, ',', '.') . ' por mes',
-            ];
+            $certificadoService = app(CertificadoService::class);
+            $data = $certificadoService->buildData($campaignlog);
 
             /* ============================
              * GENERAR PDF
              * ============================ */
-            $pdf = Pdf::loadView('emails.certificado.html', $data)
-                ->setPaper('A4', 'portrait');
-
-            $pdfContent = $pdf->output();
+            $pdfContent = $certificadoService->generatePdf($data);
 
             $filename = 'Solicitud-de-compra-' . date('YmdHis') . '.pdf';
             $path     = 'certificados/' . $filename;

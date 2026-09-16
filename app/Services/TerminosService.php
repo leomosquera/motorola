@@ -73,11 +73,9 @@ class TerminosService
             throw new \RuntimeException("Versión de términos no encontrada");
         }
 
-        $baseUrl = 'https://proteccion-motocare.com.ar';
-
         // Renderizamos la vista en PDF
         $pdf = Pdf::loadView($viewPath, [
-            'logo'     => asset('storage/img/motorola/logo.png'),
+            'logo'     => resource_path('images/terms/assurant-logo.png'),
             'terminos' => $terminos
         ])->setPaper('A4','portrait'); // podés ajustar tamaño u orientación
 
